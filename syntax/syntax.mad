@@ -1,0 +1,64 @@
+# Madown
+
+# Un h1
+# che continua sotto
+
+# Un h1
+
+# Un h1 diverso
+
+# Un h1 
+e un paragrafo
+
+> Un quote
+> che continua qui
+
+> Un quote
+e un paragrafo
+
+Un paragrafo
+che continua qui
+
+Un Paragrafo 
+
+Un paragrafo diderso
+
+`` Qui puoi mettere del doce
+`` Andando anche su più righe
+Che poi diventa un paragrafo
+> O un quote se vuoi
+
+Quindi un elemento cambia quando trovo un carattere di inizio riga diverso oppure una riga vuota
+
+# Web components
+p-name (name="asd") { un paragrafo qui };
+
+p-card .fex #casa hidden is="super" (name="casa" surname="vera") {
+
+};
+
+p-card;
+p-card (a="a" b="b");
+p-card (a="a" b="b") {c}
+p-card hidden lang="it" (a="a" b="b") {c}
+
+
+Definizione in card.mad
+???
+
+# DOM shorthands
+div .flex #casa {
+    `` Sono codice
+    `` e non riesco a smettere di scrrivere codice
+    E poi un paragrafo
+}
+
+div arial="asd" {
+    `` Sono codice
+    `` e non riesco a smettere di scrrivere codice
+    E poi un paragrafo
+}
+
+# Escape
+
+`` Questo e codice nomad { # non parsato }
