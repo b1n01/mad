@@ -1,4 +1,75 @@
 #####
+# Functions
+#####
+@{%
+const getBlock = (type, line, heading) => { 
+	if(heading) return {type:type, value: (line + ' ' + heading.value).trim()};
+	return {type:type, value:line.trim()};
+}
+%}
+
+#####
+# Macros
+#####
+
+# Line starting with X
+# -line startin with "?" => lsw["?"]
+# -line startin with somethig different from "#" => lsw[[^#]]
+lsw[X] -> $X line {% ([s,line]) => s + line %}
+
+
+#####
+# Blocks
+#####
+
+blocks -> block | block nl nl blocks {% ([b,,,bs]) => [b, ...bs]%}
+block -> h1      {% id %}
+	   | h2    {% id %}
+	   | h3    {% id %} 
+	   | h4    {% id %}
+	   | h5    {% id %}
+	   | h6    {% id %}
+         | code  {% id %} 
+	   | para  {% id %} 
+	   | quote {% id %} 
+
+# H1
+h1 -> "#" lsw[[^#]]                {% ([,line]) =>        getBlock("h1", line) %}
+    | "#" lsw[[^#]] nl h1          {% ([,line,,block]) => getBlock("h1", line, block) %}
+
+# H2
+h2 -> "##" lsw[[^##]]              {% ([,line]) =>        getBlock("h2", line) %}
+    | "##" lsw[[^##]] nl h2        {% ([,line,,block]) => getBlock("h2", line, block) %}
+
+# H3
+h3 -> "###" lsw[[^###]]            {% ([,line]) =>        getBlock("h3", line) %}
+    | "###" lsw[[^###]] nl h3      {% ([,line,,block]) => getBlock("h3", line, block) %}
+
+# H4
+h4 -> "####" lsw[[^####]]          {% ([,line]) =>        getBlock("h4", line) %}
+    | "####" lsw[[^####]] nl h4    {% ([,line,,block]) => getBlock("h4", line, block) %}
+
+# H5
+h5 -> "#####" lsw[[^####]]         {% ([,line]) =>        getBlock("h5", line) %}
+    | "#####" lsw[[^####]] nl h5   {% ([,line,,block]) => getBlock("h5", line, block) %}
+
+# H6
+h6 -> "######" lsw[[^#####]]       {% ([,line]) =>        getBlock("h6", line) %}
+    | "######" lsw[[^#####]] nl h6 {% ([,line,,block]) => getBlock("h6", line, block) %}
+
+# Code block
+code -> "`" line                    {% ([,line]) =>        getBlock("code", line) %}
+      | "`" line nl code            {% ([,line,,block]) => getBlock("code", line, block) %}
+	  
+# Blockquote
+quote -> ">" line                   {% ([,line]) =>        getBlock("quote", line) %}
+       | ">" line nl quote          {% ([,line,,block]) => getBlock("quote", line, block) %}
+
+# Paragraph
+para -> lsw[[^#`\n>]]               {% ([line]) =>        getBlock("p", line) %}
+      | lsw[[^#`\n>]] nl para       {% ([line,,block]) => getBlock("p", line, block) %}
+
+#####
 # Components
 #####
 
@@ -61,3 +132,9 @@ string -> q [\w\s.]:* q {% ([,s]) => s.join('') %}
 # An integer or a double
 number -> [\d]:+ {% ([d]) => d.join('') %}
         | [\d]:+ "." [\d]:+ {% ([d]) => d.join('') %}
+
+# Match anything in a single sile
+line -> [^\n\r]:* {% ([d]) => d.join('') %}
+
+# Match a new line
+nl -> [\n\r] {% d => null %}
