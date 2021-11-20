@@ -17,7 +17,6 @@ const getBlock = (type, line, heading) => {
 # -line startin with somethig different from "#" => lsw[[^#]]
 lsw[X] -> $X line {% ([s,line]) => s + line %}
 
-
 #####
 # Blocks
 #####
@@ -31,7 +30,7 @@ block -> h1      {% id %}
 	   | h6    {% id %}
          | code  {% id %} 
 	   | para  {% id %} 
-	   | quote {% id %} 
+         | quote {% id %} 
 
 # H1
 h1 -> "#" lsw[[^#]]                {% ([,line]) =>        getBlock("h1", line) %}
