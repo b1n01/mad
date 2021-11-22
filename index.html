@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mad syntax</title>
+    <link
+  rel="stylesheet"
+  href="https://unpkg.com/@tailwindcss/typography@0.4.x/dist/typography.min.css"
+/>
+</head>
+<body class="prose lg:prose-xl" style="margin: 40px auto;">
+    <h1>Mad syntax</h1>
+    
+    <h2>Paragraphs</h2>
+    <pre>Just type somethig to add a paragraph</pre>
+    <pre><xmp><p>Just type somethig to add a paragraph</p></xmp></pre>
+    <details>
+        <summary>Preview</summary>
+        <p>Just type somethig to add a paragraph</p>
+    </details>
+
+    <h3>Multi line paragraph</h3>
+    
+    <pre>Very long paragraphs can be splitted into multiple<br>lines if you want to keep your code clean</pre>
+    <pre><xmp><p>Very long paragraphs can be splitted into multiple lines if you want to keep your code clean</p></xmp></pre>
+    <details>
+        <summary>Preview</summary>
+        <p>Very long paragraphs can be splitted into multiple lines if you want to keep your code clean</p>
+    </details>
+
+    <h2>Headings</h2>
+    <pre>
+<xmp># H1        ->   <h1>H1</h1>
+## H2       ->   <h2>H2</h2>
+### H3      ->   <h3>H3</h3>
+#### H4     ->   <h4>H4</h4>
+##### H5    ->   <h5>H5</h5>
+###### H6   ->   <h6>H6</h6></xmp></pre>
+    <details>
+        <summary>Preview</summary>
+        <h1>H1</h1>
+        <h2>H2</h2>
+        <h3>H3</h3>
+        <h4>H4</h4>
+        <h5>H5</h5>
+        <h6>H6</h6>
+    </details>
+
+    <h3>Multi line headings</h3>
+    <pre># Very long titles can be splitted into multiple<br># lines if you want to keep your code clean</pre>
+    <pre><xmp><h1>Very long titles can be splitted into multiple lines if you want to keep your code clean</h1></xmp></pre>
+    <details>
+        <summary>Preview</summary>
+        <h1>Very long titles can be splitted into multiple lines if you want to keep your code clean</h1>
+    </details>
+    
+    <h2>Blockquote</h2>
+    <pre>> Write a quote with the `>` sign</pre>
+    <pre><xmp><blockquote><p>Write a quote with the `>` sign</p></blockquote></xmp></pre>
+    <details>
+        <summary>Preview</summary>
+        <blockquote><p>Write a quote with the `>` sign</p></blockquote>
+    </details>
+
+    <h3>Multi line blockquote</h3>
+    <pre>> Very long blockquote can be splitted into multiple<br>> lines if you want to keep your code clean</pre>
+    <pre><xmp><blockquote><p>Very long blockquote can be splitted into multiple lines if you want to keep your code clean</p></blockquote></xmp></pre>
+    <details>
+        <summary>Preview</summary>
+        <blockquote><p>Very long blockquote can be splitted into multiple lines if you want to keep your code clean</p></blockquote>
+    </details>
+
+    <h3>Code</h3>
+    <pre><xmp>! $ npx -h
+!   Run a command from a local or remote npm package
+!   npm exec -- <pkg>[@<version>] [args...]</xmp></pre>
+
+    <pre><xmp><pre><code>$ npx -h
+    Run a command from a local or remote npm package
+    npm exec -- <pkg>[@<version>] [args...]</pre></code></xmp></pre>
+
+    <details>
+        <summary>Preview</summary>
+        <pre><code>$ npx -h
+    Run a command from a local or remote npm package
+    npm exec -- <pkg>[@<version>] [args...]</pre></code> 
+    </details>
+
+    <h2>Shorthands</h2>
+    <pre><xmp>:div .flex .flex-row #my-id muted is="custom" {
+    # Title
+    Content
+}</xmp></pre>
+
+    <pre><xmp><div class="flex flex-row" id="my-id" muted is="custom">
+    <h1>Title</h1>
+    <p>Content</p>
+</div></xmp></pre>
+    <details>
+        <summary>Preview</summary>
+        <div class="flex flex-row" id="my-id" muted is="custom">
+            <h1>Title</h1>
+            <p>Content</p>
+            </div>
+    </details>
+
+    <h2>Components</h2>
+    <pre><xmp>my-card #card .flex .flex-row lang="en" {
+    title: "Mad!",
+    content: {
+        ## Subtitle
+        Content here
+    }
+}</xmp></pre>
+    <pre><xmp><my-card class="flex flex-row" id="card" lang="en">
+    <h1 slot="label">Mad!</h1>
+    <div slot="content">
+        <h2>Subtitle</h2>
+        <p>Content here</p>
+    </div>
+</my-card></xmp></pre>
+
+    <details>
+        <summary>Preview</summary>
+        <my-card class="flex flex-row" id="card" lang="en">
+            <h1 slot="label">Mad!</h1>
+            <div slot="content">
+                <h2>Subtitle</h2>
+                <p>Content here</p>
+            </div>
+        </my-card>
+    </details>
+
+</body>
+</html>
