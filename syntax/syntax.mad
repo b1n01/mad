@@ -1,64 +1,51 @@
-# Madown
+<!--  block  -->
 
-# Un h1
-# che continua sotto
+# h1
 
-# Un h1
+## h2
 
-# Un h1 diverso
+### h3
 
-# Un h1 
-e un paragrafo
+#### h4
 
-> Un quote
-> che continua qui
+##### h5
 
-> Un quote
-e un paragrafo
+###### h6
 
-Un paragrafo
-che continua qui
+> Blockquotes block
 
-Un Paragrafo 
+Paragraph
 
-Un paragrafo diderso
+<!--  multiline-block  -->
 
-`` Qui puoi mettere del doce
-`` Andando anche su più righe
-Che poi diventa un paragrafo
-> O un quote se vuoi
+! Code block
 
-Quindi un elemento cambia quando trovo un carattere di inizio riga diverso oppure una riga vuota
+<!--  inline  -->
 
-# Web components
-p-name (name="asd") { un paragrafo qui };
+**This is bold text**
 
-p-card .fex #casa hidden is="super" (name="casa" surname="vera") {
+_This is italic text_
 
-};
+~Strikethrough~
 
-p-card;
-p-card (a="a" b="b");
-p-card (a="a" b="b") {c}
-p-card hidden lang="it" (a="a" b="b") {c}
+`Inline code`
 
+<!--  links  -->
 
-Definizione in card.mad
-???
+[name](https://link.com "Title")
 
-# DOM shorthands
-div .flex #casa {
-    `` Sono codice
-    `` e non riesco a smettere di scrrivere codice
-    E poi un paragrafo
-}
+![Image alt](https://image.com)
 
-div arial="asd" {
-    `` Sono codice
-    `` e non riesco a smettere di scrrivere codice
-    E poi un paragrafo
-}
+<!--  lists  -->
 
-# Escape
+- Unordered item
+- Unordered item 2
+ - Sub unordered item
 
-`` Questo e codice nomad { # non parsato }
++ Ordered list
++ Ordered list 2
+  + Sub ordered list
+
+<!--  horizontal-line  -->
+
+---
