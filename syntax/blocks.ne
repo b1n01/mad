@@ -1,3 +1,7 @@
+#####
+# Blocks
+#####
+
 @{%
     const join = line => line.join('').trim()
 	const raw  = line => line.reduce((prev, curr) => curr == ' ' ? prev + '\xa0' : prev + curr ,'')
@@ -19,21 +23,24 @@ block -> h1    {% id %}
 	   | quote {% id %}
 	   | code  {% id %}
 
-h1    -> crs empty "#"     [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h1',    s:crs.length, v:c + join(l) }) %}
-       | crs empty "#"                   {% ([crs])       => ({t:'h1',    s:crs.length, v:''         }) %}
-h2    -> crs empty "##"    [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h2',    s:crs.length, v:c + join(l) }) %}
-       | crs empty "##"                  {% ([crs])       => ({t:'h2',    s:crs.length, v:''          }) %}
-h3    -> crs empty "###"   [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h3',    s:crs.length, v:c + join(l) }) %}
-       | crs empty "###"                 {% ([crs])       => ({t:'h3',    s:crs.length, v:''          }) %}
-h4    -> crs empty "####"  [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h4',    s:crs.length, v:c + join(l) }) %}
-       | crs empty "####"                {% ([crs])       => ({t:'h4',    s:crs.length, v:''          }) %}
-h5    -> crs empty "#####" [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h5',    s:crs.length, v:c + join(l) }) %}
-       | crs empty "####"                {% ([crs])       => ({t:'h5',    s:crs.length, v:''          }) %}
-h6    -> crs empty "######"         line {% ([crs,,,l])   => ({t:'h6',    s:crs.length, v:join(l)     }) %}
-p     -> crs empty [^#>`\s]         line {% ([crs,,c,l])  => ({t:'p',     s:crs.length, v:c + join(l) }) %}
-quote -> crs empty ">"              line {% ([crs,,,l])   => ({t:'quote', s:crs.length, v:join(l)     }) %}
-code  -> crs empty "`"              line {% ([crs,,,l])   => ({t:'code',  s:crs.length, v:raw(l)      }) %}
+h1    -> crs empty "#"     [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h1',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "#"                   {% ([crs])       => ({t:'h1',    s:crs.length, v:''         })          %}
+h2    -> crs empty "##"    [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h2',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "##"                  {% ([crs])       => ({t:'h2',    s:crs.length, v:''          })         %}
+h3    -> crs empty "###"   [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h3',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "###"                 {% ([crs])       => ({t:'h3',    s:crs.length, v:''          })         %}
+h4    -> crs empty "####"  [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h4',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "####"                {% ([crs])       => ({t:'h4',    s:crs.length, v:''          })         %}
+h5    -> crs empty "#####" [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h5',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "####"                {% ([crs])       => ({t:'h5',    s:crs.length, v:''          })         %}
+h6    -> crs empty "######"         line {% ([crs,,,l])   => ({t:'h6',    s:crs.length, v:join(l)     })         %}
+p     -> crs empty [^#>`\s]         line {% ([crs,,c,l])  => ({t:'p',     s:crs.length, v:c.trim('') + join(l)}) %}
+quote -> crs empty ">"              line {% ([crs,,,l])   => ({t:'quote', s:crs.length, v:join(l)     })         %}
+code  -> crs empty "`"              line {% ([crs,,,l])   => ({t:'code',  s:crs.length, v:raw(l)      })         %}
 
+#####
+# Utility
+#####
 
 # Carriage return: an empty line followed by a new-line char
 crs -> (empty nl):* {% id %}

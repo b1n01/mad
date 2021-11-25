@@ -2,40 +2,40 @@
 # Components
 #####
 
-components -> component 
-            | component _ components {% ([c,,cs]) => [c, ...cs] %}
+comps -> comp 
+       | comp _ comps {% ([c,,cs]) => [c, ...cs] %}
 
-component -> tag _ ";" {% ([tag]) => ({type:"empty-component", tag}) %}
-		   | tag __ attrsBlock _ ";" {% ([tag,,attrs]) => ({type:"component-with-attrs", tag, attrs}) %}
-		   | tag _ "{" _ args _ "}" _ ";":? {% ([tag,,,,args]) => ({type:"component-with-args", tag, args}) %}
-		   | tag __ attrsBlock _ "{" _ args _ "}" _ ";":? {% ([tag,,attrs,,,,args]) => ({type:"component-with-attrs-and-args", tag, attrs, args}) %}
+comp -> tag _ ";"                                      {% ([t])                => ({t:"comp",            t})              %}
+	  | tag __ attrsBlock _ ";"                      {% ([t,,attrs])         => ({t:"comp-attrs",      t, attrs})       %}
+        | tag _ "{" _ args _ "}" _ ";":?               {% ([t,,,,args])        => ({t:"comp-args",       t, args})        %}
+	  | tag __ attrsBlock _ "{" _ args _ "}" _ ";":? {% ([t,,attrs,,,,args]) => ({t:"comp-attrs-args", t, attrs, args}) %}
 
 tag -> word "-" word  {% d => d.join('') %}
 
 # Ensure id is set only once
-attrsBlock -> attrs {% id %}
-             | id {% id %}
-             | attrs __ id {% ([attrs,,id]) => [...attrs, id] %}
-			 | id __ attrs {% ([id,,attrs]) => [id, ...attrs] %}
-			 | attrs __ id __ attrs {% ([attrs1,,id,,attrs2]) => [...attrs1, id, ...attrs2] %}
+attrsBlock -> attrs                {% id %}
+            | id                   {% id %}
+            | attrs __ id          {% ([as,,id])       => [...as, id]          %}
+            | id __ attrs          {% ([id,,as])       => [id, ...as]          %}
+            | attrs __ id __ attrs {% ([as1,,id,,as2]) => [...as1, id, ...as2] %}
 			 
 attrs -> attr 
-	   | attr __ attrs {% ([attr,,attrs]) => [attr, ...attrs] %}
+	 | attr __ attrs {% ([attr,,attrs]) => [attr, ...attrs] %}
 	  
-attr -> word {% ([value]) => ({type:"boolean-attribute", value}) %}
-      | word _ "=" _ q _ word _ q {% ([name,,,,,,value]) => ({type:"value-attribute", name, value}) %}
-	  | "." word {% ([,value]) => ({type:"class-attribute", value}) %}
+attr -> word                      {% ([v])        => ({t:"boolean-attr", v})    %}
+      | word _ "=" _ q _ word _ q {% ([n,,,,,,v]) => ({t:"value-attr",   n, v}) %}
+	| "." word                  {% ([,v])       => ({t:"class-attr",   v})    %}
      
-id -> "#" word {% ([,value]) => ({type:"id-attribute", value}) %}
+id -> "#" word {% ([,v]) => ({t:"id-attribute", v}) %}
 
 args -> arg
       | arg _ "," _ args {% ([arg,,,,args]) => [arg, ...args] %}
 
-arg -> word _ ":" _ alphanum ",":? {% ([name,,,,value]) => ({type:"value-argument", name, value}) %}
-     | word _ ":" _ "{" textArg "}" ",":? {% ([name,,,,,content]) => ({type:"object-argument", name, content:[content]}) %}
-	 | word _ ":" _ "{" _ components "}" ",":? {% ([name,,,,,,components]) => ({type:"object-argument", name, content: components}) %}
+arg -> word _ ":" _ alphanum ",":?        {% ([n,,,,v])       => ({t:"value-arg",  n, v})        %}
+     | word _ ":" _ "{" textArg "}" ",":? {% ([n,,,,,c])      => ({t:"object-arg", n, c:[c]})    %}
+     | word _ ":" _ "{" _ comps "}" ",":? {% ([n,,,,,,comps]) => ({t:"object-arg", n, c: comps}) %}
 
-textArg -> text {% ([value]) => ({type:"text-argument", value}) %}
+textArg -> text {% ([value]) => ({type:"text-arg", value}) %}
 
 #####
 # Utility
@@ -47,6 +47,7 @@ _ -> [\s]:* {% d => null %}
 # At least one space
 __ -> [\s]:+ {% d => null %}
 
+# A single quote or a double quote
 q -> "'" | "\"" {% d => null %}
 
 # A single word with no special character
