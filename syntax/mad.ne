@@ -4,24 +4,24 @@
 
 mad -> _                  {% d => []     %}
      | blockStart (nl):*  {% id          %}
-	 | _ compStart _      {% ([,d]) => d %}
-	 
+     | _ compStart _      {% ([,d]) => d %}
+     
 blockStart -> block nl blockStart          {% ([b,,b1]) => [b, ...b1] %}
             | block (nl empty):+ compStart {% ([b,,b1]) => [b, ...b1] %}
-			| block
-	 
+            | block
+     
 compStart -> comp (nl empty):* compStart   {% ([b,,b1]) => [b, ...b1] %}
            | comp nl blockStart            {% ([b,,b1]) => [b, ...b1] %}
-		   | comp                       
+           | comp                       
 
 #####
 # Components
 #####
 
 comp -> tag _ ";"                                      {% ([tag])                => ({t:"comp",            tag})              %}
-	  | tag __ attrsBlock _ ";"                        {% ([tag,,attrs])         => ({t:"comp-attrs",      tag, attrs})       %}
+      | tag __ attrsBlock _ ";"                        {% ([tag,,attrs])         => ({t:"comp-attrs",      tag, attrs})       %}
       | tag _ "{" _ args _ "}" (_ ";"):?               {% ([tag,,,,args])        => ({t:"comp-args",       tag, args})        %}
-	  | tag __ attrsBlock _ "{" _ args _ "}" (_ ";"):? {% ([tag,,attrs,,,,args]) => ({t:"comp-attrs-args", tag, attrs, args}) %}
+      | tag __ attrsBlock _ "{" _ args _ "}" (_ ";"):? {% ([tag,,attrs,,,,args]) => ({t:"comp-attrs-args", tag, attrs, args}) %}
 
 tag -> ":" word "-" word  {% ([,w1,,w2]) => w1 + '-' + w2 %}
 
@@ -29,15 +29,15 @@ tag -> ":" word "-" word  {% ([,w1,,w2]) => w1 + '-' + w2 %}
 attrsBlock -> attrs                {% id %}
             | id                   {% id %}
             | attrs __ id          {% ([as,,id])       => [...as, id]          %}
-			| id __ attrs          {% ([id,,as])       => [id, ...as]          %}
-			| attrs __ id __ attrs {% ([as1,,id,,as2]) => [...as1, id, ...as2] %}
-			 
+            | id __ attrs          {% ([id,,as])       => [id, ...as]          %}
+            | attrs __ id __ attrs {% ([as1,,id,,as2]) => [...as1, id, ...as2] %}
+             
 attrs -> attr 
-	   | attr __ attrs {% ([attr,,attrs]) => [attr, ...attrs] %}
-	  
+       | attr __ attrs {% ([attr,,attrs]) => [attr, ...attrs] %}
+      
 attr -> word                {% ([v])     => ({t:"boolean-attr", v})    %}
       | word _ "=" alphanum {% ([n,,,v]) => ({t:"value-attr",   n, v}) %}
-	  | "." word            {% ([,v])    => ({t:"class-attr",   v})    %}
+      | "." word            {% ([,v])    => ({t:"class-attr",   v})    %}
      
 id -> "#" word {% ([,v]) => ({t:"id-attribute", v}) %}
 
@@ -45,7 +45,7 @@ args -> arg _ ",":?      {% ([arg]) => [arg] %}
       | arg _ "," _ args {% ([arg,,,,args]) => [arg, ...args] %}
 
 arg -> word _ ":" _ alphanum    {% ([n,,,,v])       => ({t:"value-arg",  n, v})    %}
-	 | word _ ":" _ "{" mad "}" {% ([n,,,,,comps]) => ({t:"mad-arg", n, c: comps}) %}
+     | word _ ":" _ "{" mad "}" {% ([n,,,,,comps]) => ({t:"mad-arg", n, c: comps}) %}
 
 #####
 # Blocks
@@ -53,18 +53,18 @@ arg -> word _ ":" _ alphanum    {% ([n,,,,v])       => ({t:"value-arg",  n, v}) 
 
 @{%
     const join = line => line.join('').trim()
-	const raw  = line => line.reduce((prev, curr) => curr == ' ' ? prev + '\xa0' : prev + curr ,'')
+    const raw  = line => line.reduce((prev, curr) => curr == ' ' ? prev + '\xa0' : prev + curr ,'')
 %}
 
 block -> h1    {% id %}
-	   | h2    {% id %}
-	   | h3    {% id %}
-	   | h4    {% id %}	
-	   | h5    {% id %}
-	   | h6    {% id %}
-	   | p     {% id %}
-	   | quote {% id %}
-	   | code  {% id %}
+       | h2    {% id %}
+       | h3    {% id %}
+       | h4    {% id %}	
+       | h5    {% id %}
+       | h6    {% id %}
+       | p     {% id %}
+       | quote {% id %}
+       | code  {% id %}
 
 h1    -> crs empty "#"     [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h1',    s:crs.length, v:c.trim('') + join(l)}) %}
        | crs empty "#"                   {% ([crs])       => ({t:'h1',    s:crs.length, v:''         })          %}
