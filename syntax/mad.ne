@@ -66,20 +66,20 @@ block -> h1    {% id %}
        | quote {% id %}
        | code  {% id %}
 
-h1    -> crs empty "#"     [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h1',    s:crs.length, v:c.trim('') + join(l)}) %}
-       | crs empty "#"                   {% ([crs])       => ({t:'h1',    s:crs.length, v:''         })          %}
-h2    -> crs empty "##"    [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h2',    s:crs.length, v:c.trim('') + join(l)}) %}
-       | crs empty "##"                  {% ([crs])       => ({t:'h2',    s:crs.length, v:''          })         %}
-h3    -> crs empty "###"   [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h3',    s:crs.length, v:c.trim('') + join(l)}) %}
-       | crs empty "###"                 {% ([crs])       => ({t:'h3',    s:crs.length, v:''          })         %}
-h4    -> crs empty "####"  [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h4',    s:crs.length, v:c.trim('') + join(l)}) %}
-       | crs empty "####"                {% ([crs])       => ({t:'h4',    s:crs.length, v:''          })         %}
-h5    -> crs empty "#####" [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h5',    s:crs.length, v:c.trim('') + join(l)}) %}
-       | crs empty "#####"               {% ([crs])       => ({t:'h5',    s:crs.length, v:''          })         %}
-h6    -> crs empty "######"         line {% ([crs,,,l])   => ({t:'h6',    s:crs.length, v:join(l)     })         %}
-p     -> crs empty [^#>`\s:]        line {% ([crs,,c,l])  => ({t:'p',     s:crs.length, v:c.trim('') + join(l)}) %}
-quote -> crs empty ">"              line {% ([crs,,,l])   => ({t:'quote', s:crs.length, v:join(l)     })         %}
-code  -> crs empty "`"              line {% ([crs,,,l])   => ({t:'code',  s:crs.length, v:raw(l)      })         %}
+h1    -> crs empty "#"     [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h1', tags:['h1'],          g:' ',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "#"                   {% ([crs])       => ({t:'h1', tags:['h1'],          g:' ',    s:crs.length, v:''                  }) %}
+h2    -> crs empty "##"    [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h2', tags:['h2'],          g:' ',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "##"                  {% ([crs])       => ({t:'h2', tags:['h2'],          g:' ',    s:crs.length, v:''                  }) %}
+h3    -> crs empty "###"   [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h3', tags:['h3'],          g:' ',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "###"                 {% ([crs])       => ({t:'h3', tags:['h3'],          g:' ',    s:crs.length, v:''                  }) %}
+h4    -> crs empty "####"  [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h4', tags:['h4'],          g:' ',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "####"                {% ([crs])       => ({t:'h4', tags:['h4'],          g:' ',    s:crs.length, v:''                  }) %}
+h5    -> crs empty "#####" [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h5', tags:['h5'],          g:' ',    s:crs.length, v:c.trim('') + join(l)}) %}
+       | crs empty "#####"               {% ([crs])       => ({t:'h5', tags:['h5'],          g:' ',    s:crs.length, v:''                  }) %}
+h6    -> crs empty "######"         line {% ([crs,,,l])   => ({t:'h6', tags:['h6'],          g:' ',    s:crs.length, v:join(l)             }) %}
+p     -> crs empty [^#>`\s:]        line {% ([crs,,c,l])  => ({t:'p',  tags:['p'],           g:' ',    s:crs.length, v:c.trim('') + join(l)}) %}
+quote -> crs empty ">"              line {% ([crs,,,l])   => ({t:'q',  tags:['blockquote'],  g:' ',    s:crs.length, v:join(l)             }) %}
+code  -> crs empty "`"              line {% ([crs,,,l])   => ({t:'c',  tags:['pre', 'code'], g:'<br>', s:crs.length, v:raw(l)              }) %}
 
 #####
 # Utility
