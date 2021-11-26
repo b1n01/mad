@@ -52,8 +52,8 @@ arg -> word _ ":" _ alphanum    {% ([n,,,,v])       => ({t:"value-arg",  n, v}) 
 #####
 
 @{%
-    const join = line => line.join('').trim()
-    const raw  = line => line.reduce((prev, curr) => curr == ' ' ? prev + '\xa0' : prev + curr ,'')
+const join = line => line.join('').trim()
+const raw  = line => line.reduce((prev, curr) => curr == ' ' ? prev + ' ' : prev + curr ,'')
 %}
 
 block -> h1    {% id %}
@@ -75,7 +75,7 @@ h3    -> crs empty "###"   [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h3',    s:crs.
 h4    -> crs empty "####"  [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h4',    s:crs.length, v:c.trim('') + join(l)}) %}
        | crs empty "####"                {% ([crs])       => ({t:'h4',    s:crs.length, v:''          })         %}
 h5    -> crs empty "#####" [^#\n\r] line {% ([crs,,,c,l]) => ({t:'h5',    s:crs.length, v:c.trim('') + join(l)}) %}
-       | crs empty "####"                {% ([crs])       => ({t:'h5',    s:crs.length, v:''          })         %}
+       | crs empty "#####"               {% ([crs])       => ({t:'h5',    s:crs.length, v:''          })         %}
 h6    -> crs empty "######"         line {% ([crs,,,l])   => ({t:'h6',    s:crs.length, v:join(l)     })         %}
 p     -> crs empty [^#>`\s:]        line {% ([crs,,c,l])  => ({t:'p',     s:crs.length, v:c.trim('') + join(l)}) %}
 quote -> crs empty ">"              line {% ([crs,,,l])   => ({t:'quote', s:crs.length, v:join(l)     })         %}

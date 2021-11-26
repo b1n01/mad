@@ -1,5 +1,12 @@
 {
+  "scripts": {
+    "test": "jest",
+    "compile": "nearleyc syntax/mad.ne -o src/parser.js"
+  },
   "dependencies": {
     "nearley": "^2.20.1"
+  },
+  "devDependencies": {
+    "jest": "^27.3.1"
   }
 }
