@@ -1,3 +1,4 @@
+// Test spacing before and after the symbol for block-element
 const blockSpacing = (symbol, tag) => ([
     {
         i: `${symbol}`,
@@ -39,8 +40,19 @@ const blockSpacing = (symbol, tag) => ([
         o: `<${tag}>Content</${tag}>`,
         t: `${tag} with multiple leading and trailing spaces`,
     },
+    {
+        i: ` ${symbol}Content`,
+        o: `<${tag}>Content</${tag}>`,
+        t: `${tag} with single space befor symbol`,
+    },
+    {
+        i: `     ${symbol}Content`,
+        o: `<${tag}>Content</${tag}>`,
+        t: `${tag} with multiple space befor symbol`,    
+    },
 ]);
 
+// Test spacing before and after the symbol for pre-element
 const preSpacing = (symbol, tag) => ([
     {
         i: `${symbol}`,
@@ -84,13 +96,15 @@ const preSpacing = (symbol, tag) => ([
     },
 ]);
 
+// Test spacing before and after the symbol for paragraphs
 const paragraphSpacing = (symbol, tag) => {
     let tests = blockSpacing(symbol, tag);
     tests.shift();
     return tests;
 }
 
-const multiLineBlock = (symbol, tag) => ([
+// Test multiple line of same symbol for block-element
+const blockMultiLine = (symbol, tag) => ([
     {
         i: `${symbol} First
             ${symbol} second`,
@@ -100,11 +114,37 @@ const multiLineBlock = (symbol, tag) => ([
     {
         i: `${symbol} First
 
-            ${symbol} second`,
-        o: `<${tag}>First</${tag}><${tag}>second</${tag}>`,
+            ${symbol} Second`,
+        o: `<${tag}>First</${tag}><${tag}>Second</${tag}>`,
         t: `Saperated ${tag} lines`,
     },
 ]);
+
+// Test multiple line of same symbol for pre-element
+const preMultiline = (symbol, tag) => ([
+    {
+        i: `${symbol}First
+            ${symbol}second`,
+        o: `<pre><${tag}>First<br>second</${tag}></pre>`,
+        t: `Contiguous ${tag} lines`,
+    },
+    {
+        i: `${symbol}First
+
+            ${symbol}Second`,
+        o: `<pre><${tag}>First</${tag}></pre><pre><${tag}>Second</${tag}></pre>`,
+        t: `Saperated ${tag} lines`,
+    },
+]);
+
+// TODO est symbols inside other tag
+// eg: "# First > second" -> "<h1>First > second</h1>" 
+
+// TODO test different symbols combinations
+// eg:
+// i = "# First
+// > second"
+// o =  "<h1>First</h1><blockquote>Second</blockquote>" 
 
 (() => {
     let tests = [];
@@ -119,21 +159,21 @@ const multiLineBlock = (symbol, tag) => ([
         ['>', 'blockquote'],
     ].forEach(([symbol, tag]) => {
         tests.push(...blockSpacing(symbol, tag));
-        tests.push(...multiLineBlock(symbol, tag));
+        tests.push(...blockMultiLine(symbol, tag));
     });
 
     [
         ['`', 'code'],
     ].forEach(([symbol, tag]) => {
         tests.push(...preSpacing(symbol, tag))
-        // TODO tests.push(...preMultilines(symbol, tag))
+        tests.push(...preMultiline(symbol, tag))
     });
 
     [
         ['', 'p'],
     ].forEach(([symbol, tag]) => {
         tests.push(...paragraphSpacing(symbol, tag))
-        tests.push(...multiLineBlock(symbol, tag))
+        tests.push(...blockMultiLine(symbol, tag))
     });
 
     module.exports = tests;
