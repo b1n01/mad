@@ -3,7 +3,18 @@ const nearley = require("nearley");
 // Load the grammar (generated with: nearleyc syntax/mad.ne -o src/parser.js)
 const grammar = require("./parser.js");
 
-// Convert an ast node of type "attr" to string
+// Join an array of charts to string keeping spaces and converting null -> <br>
+const raw = (arr) => arr.reduce((prev, curr) => prev + (curr || "<br>"), "");
+
+// Join an array of charts to string removing spaces and converting null -> " "
+const join = (arr) =>
+  arr
+    .map((e) => e || " ") // null -> " "
+    .join("")
+    .replace(/\s{2,}/g, " ") // remove double spaces
+    .trim();
+
+// Convert an AST node of type "attr" to string
 const parseAttrs = (nodes) => {
   let attrs = [];
   let classes = [];
@@ -36,10 +47,11 @@ const parseAttrs = (nodes) => {
 };
 
 // Convert ast node to html
-const parseNode = (node, attrs) => {
-  attrs = parseAttrs(attrs);
+const parseNode = (node) => {
+  attrs = parseAttrs(node.a || []);
 
   let data = "";
+  let value = "";
   switch (node.t) {
     case "p":
     case "h1":
@@ -49,13 +61,16 @@ const parseNode = (node, attrs) => {
     case "h5":
     case "h6":
     case "p":
-      data += `<${node.t}${attrs}>${node.v}</${node.t}>`;
+      value = join(node.v);
+      data += `<${node.t}${attrs}>${value}</${node.t}>`;
       break;
     case "quote":
-      data += `<blockquote${attrs}>${node.v}</blockquote>`;
+      value = join(node.v);
+      data += `<blockquote${attrs}>${value}</blockquote>`;
       break;
     case "code":
-      data += `<pre${attrs}><code>${node.v}</code></pre>`;
+      value = raw(node.v);
+      data += `<pre${attrs}><code>${value}</code></pre>`;
       break;
     default:
       console.log(`Ignoring ast node of type "${node.t}"`);
@@ -72,32 +87,35 @@ module.exports = (source) => {
 
   const ast = parser.results;
   if (ast.length > 1) {
-    console.log("Ambiguos syntax alert");
+    console.log("Ambiguos syntax");
     process.exit(1);
   }
 
   const nodes = ast.shift() || [];
-  let prev = nodes?.shift() || [];
+  let prev = nodes?.shift();
+  prev = { ...prev, s: 0, a: [] };
   let result = "";
-  let attrs = [];
 
   for (let node of nodes) {
-    if (prev.t === "attr") {
-      attrs = prev.v;
-      prev = node;
+    if (prev.t === "empty") {
+      node.s = prev.s ? prev.s + 1 : 1;
+      node.a = prev.a || [];
+    } else if (prev.t === "attr") {
+      node.s = prev.s || 0;
+      node.a = prev.v;
     } else {
-      if (prev.t === node.t && node.s === 0) {
-        const glue = node.t === "code" ? "<br>" : " ";
-        node.v = prev.v.concat(glue).concat(node.v);
+      if (prev.t === node.t && prev.s === 0) {
+        node.v = [...prev.v, null, ...node.v];
+        node.a = prev.a;
+        node.s = prev.s || 0;
       } else {
-        result += parseNode(prev, attrs);
-        attrs = [];
+        result += parseNode(prev);
       }
-      prev = node;
     }
+    prev = node;
   }
 
-  result += parseNode(prev, attrs);
+  result += parseNode(prev);
 
   return result;
 };

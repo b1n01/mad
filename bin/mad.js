@@ -7,5 +7,5 @@ const compile = require("../src/compiler.js");
   const file = process.argv[2];
   const content = await fs.readFile(file);
   const result = compile(content.toString());
-  console.log(result);
+  fs.writeFile(file.replace(".mad", ".html"), result);
 })();
