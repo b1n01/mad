@@ -3,17 +3,6 @@ const nearley = require("nearley");
 // Load the grammar (generated with: nearleyc syntax/mad.ne -o src/parser.js)
 const grammar = require("./parser.js");
 
-// Join an array of charts to string keeping spaces and converting null -> <br>
-const raw = (arr) => arr.reduce((prev, curr) => prev + (curr || "<br>"), "");
-
-// Join an array of charts to string removing spaces and converting null -> " "
-const join = (arr) =>
-  arr
-    .map((e) => e || " ") // null -> " "
-    .join("")
-    .replace(/\s{2,}/g, " ") // remove double spaces
-    .trim();
-
 // Convert an AST node of type "attr" to string
 const parseAttrs = (nodes) => {
   let attrs = [];
@@ -51,7 +40,6 @@ const parseNode = (node) => {
   attrs = parseAttrs(node.a || []);
 
   let data = "";
-  let value = "";
   switch (node.t) {
     case "p":
     case "h1":
@@ -61,16 +49,13 @@ const parseNode = (node) => {
     case "h5":
     case "h6":
     case "p":
-      value = join(node.v);
-      data += `<${node.t}${attrs}>${value}</${node.t}>`;
+      data += `<${node.t}${attrs}>${node.v}</${node.t}>`;
       break;
     case "quote":
-      value = join(node.v);
-      data += `<blockquote${attrs}>${value}</blockquote>`;
+      data += `<blockquote${attrs}>${node.v}</blockquote>`;
       break;
     case "code":
-      value = raw(node.v);
-      data += `<pre${attrs}><code>${value}</code></pre>`;
+      data += `<pre${attrs}><code>${node.v}</code></pre>`;
       break;
     default:
       console.log(`Ignoring ast node of type "${node.t}"`);
@@ -105,7 +90,8 @@ module.exports = (source) => {
       node.a = prev.v;
     } else {
       if (prev.t === node.t && prev.s === 0) {
-        node.v = [...prev.v, null, ...node.v];
+        let glue = node.t === "code" ? "<br>" : " ";
+        node.v = [prev.v, node.v].join(glue);
         node.a = prev.a;
         node.s = prev.s || 0;
       } else {

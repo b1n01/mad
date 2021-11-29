@@ -2,14 +2,11 @@
 # Mad
 #####
 
-mad -> elem
-     | elem nl mad {% ([e,,m]) => [e, ...m] %}
-
-#####
-# Elements
-#####
-
-elem -> h1    {% id %}
+mad -> expr
+     | expr nl mad {% ([e,,m]) => [e, ...m] %}
+	 
+expr -> e     {% id %}
+      | h1    {% id %}
       | h2    {% id %}
       | h3    {% id %}
       | h4    {% id %}	
@@ -20,40 +17,38 @@ elem -> h1    {% id %}
       | code  {% id %}
       | comp  {% id %}
       | attr  {% id %}
-      | e     {% id %}
-
-h1    -> e "#"     [^#\n\r] line  {% ([,,c,l])    => ({t:'h1',    v:[c, ...l]}) %}
-       | e "#"                    {% ()           => ({t:'h1',    v:[]       }) %}
-h2    -> e "##"    [^#\n\r] line  {% ([,,c,l])    => ({t:'h2',    v:[c, ...l]}) %}
-       | e "##"                   {% ()           => ({t:'h2',    v:[]       }) %}
-h3    -> e "###"   [^#\n\r] line  {% ([,,c,l])    => ({t:'h3',    v:[c, ...l]}) %}
-       | e "###"                  {% ()           => ({t:'h3',    v:[]       }) %}
-h4    -> e "####"  [^#\n\r] line  {% ([,,c,l])    => ({t:'h4',    v:[c, ...l]}) %}
-       | e "####"                 {% ()           => ({t:'h4',    v:[]       }) %}
-h5    -> e "#####" [^#\n\r] line  {% ([,,c,l])    => ({t:'h5',    v:[c, ...l]}) %}
-       | e "#####"                {% ()           => ({t:'h5',    v:[]       }) %}
-h6    -> e "######"         line  {% ([,,l])      => ({t:'h6',    v:l        }) %}
-p     -> e [^#>`\s:{]       line  {% ([,c,l])     => ({t:'p',     v:[c, ...l]}) %}
-quote -> e ">"              line  {% ([,,l])      => ({t:'quote', v:l        }) %}
-code  -> e "`"              line  {% ([,,l])      => ({t:'code',  v:l        }) %}
-comp  -> e tag                    {% ([,t])       => ({t:"comp",  v:t, a:[]  }) %}
-       | e tag _ "{" _ args _ "}" {% ([,t,,,,as]) => ({t:"comp",  v:t, a:as  }) %}
-attr  -> e "{" _ attrs _ "}" line {% ([,,,a])     => ({t:'attr',  v:a        }) %}
 
 #####
-# Arguments
+# Elements
 #####
 
-args -> arg _ ",":?              {% ([arg])         => [arg]                     %}
-      | arg _ "," _ args         {% ([arg,,,,args]) => [arg, ...args]            %}
-arg  -> word _ ":" _ anum        {% ([n,,,,v])      => ({t:"named-arg",   n, v}) %}
-      | word _ ":" _ "{" mad "}" {% ([n,,,,,c])     => ({t:"content-arg", n, c}) %}
+h[s] -> e $s ([^#\n\r] line {% ([c,l]) => `${c}${l}`.trim() %}):? {% ([,,l]) => l || '' %}
+
+h1    -> h["#"]                   {% ([l])        => ({t:"h1",    v:l                }) %}
+h2    -> h["##"]                  {% ([l])        => ({t:"h2",    v:l                }) %}
+h3    -> h["###"]                 {% ([l])        => ({t:"h3",    v:l                }) %}
+h4    -> h["####"]                {% ([l])        => ({t:"h4",    v:l                }) %}
+h5    -> h["#####"]               {% ([l])        => ({t:"h5",    v:l                }) %}
+h6    -> h["######"]              {% ([l])        => ({t:"h6",    v:l                }) %}
+quote -> e ">" line               {% ([,,l])      => ({t:'quote', v:l.trim()         }) %}
+code  -> e "`" line               {% ([,,l])      => ({t:'code',  v:l                }) %}
+p     -> e [^#>`\s:{] line        {% ([,c,l])     => ({t:'p',     v:`${c}${l}`.trim()}) %}
+
+#####
+# Components
+#####
+comp  -> e tag                    {% ([,t])          => ({t:"comp",  v:t, a:[] }) %}
+       | e tag _ "{" _ args _ "}" {% ([,t,,,,as])    => ({t:"comp",  v:t, a:as }) %}
+args  -> arg _ ",":?              {% ([arg])         => [arg]                     %}
+       | arg _ "," _ args         {% ([arg,,,,args]) => [arg, ...args]            %}
+arg   -> word _ ":" _ anum        {% ([n,,,,v])      => ({t:"named-arg",   n, v}) %}
+       | word _ ":" _ "{" mad "}" {% ([n,,,,,c])     => ({t:"content-arg", n, c}) %}
 
 #####
 # Attributes
 #####
 
-# Ensure id is set only once
+attr      -> e "{" _ attrs _ "}"  {% ([,,,a])         => ({t:'attr',  v:a      }) %}
 attrs     -> props                {% id                                           %}
            | id                   {% id                                           %}
            | props __ id          {% ([as,,id])       => [...as, id]              %}
@@ -79,6 +74,10 @@ _ -> [\s]:* {% d => null %}
 # At least one space
 __ -> [\s]:+ {% d => null %}
 
+# Empty line: any number of space on same line
+e -> [^\S\r\n]:* {% () => ({t:"empty"}) %}
+
+# Both signle od double quotes
 q -> "'" | "\"" {% d => null %}
 
 # A single word with no special character
@@ -99,10 +98,7 @@ number -> [\d]:+            {% ([d]) => d.join('') %}
 nl -> [\n\r] {% d => null %}
 
 # Any chars in a single line
-line -> [^\n\r]:* {% id %}
-
-# Empty line, any number of space on same line
-e -> [^\S\r\n]:* {% () => ({t:"empty"}) %}
+line -> [^\n\r]:* {% ([d]) => d.join('') %}
 
 # Two words sepataded by a dash
 tag -> ":" word "-" word {% ([,w1,d,w2]) => w1 + d + w2 %}
