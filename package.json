@@ -4,6 +4,7 @@
     "compile": "nearleyc syntax/mad.ne -o src/parser.js"
   },
   "dependencies": {
+    "moo": "^0.5.1",
     "nearley": "^2.20.1"
   },
   "devDependencies": {
