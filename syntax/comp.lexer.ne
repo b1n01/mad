@@ -1,44 +1,36 @@
 @{%
 const moo = require("moo");
 const lexer = moo.compile({
-	s: {match: /[\s]+/, lineBreaks: true}, // white spaces
-	q: /'|"/, // double or single quotes
+	s: {match: /[\s]/, lineBreaks: true},
+	q: /'|"/,
 	digit: /[\d]+/,
-	word: /[\w]+/,
+	word: {match: /[\w]+/, value: d => d.trim()},
 	"(": "(",
 	")": ")",
 	"{": "{",
     "}": "}",
 	".": ".",
 	":": ":",
-	";": ";",
 	",": ",",
 	"@": "@",
 });
+
+const fmtComp = ([,w,,,,,,as]) => ({type: "comp", name: w.value, value: as ? as[0] : [] })
+const fmtArgs = ([arg, args]) => args && args[2] ? [arg, ...args[2][1]] : [arg]
+const fmtNamedArg = ([w,,,,a]) => ({type: "named-arg", name: w.value, value: a[0]})
+const fmtContentArg = ([w,,,,,,c]) => ({type: "content-arg", name: w.value, value: c ? c[0] : []})
 %}
 
 @lexer lexer
 
-comp  -> "@" word
-       | "@" word %s:? "(" %s:? "{" %s:? args:* %s:? "}" %s:? ")"
-	     {% ([,w,,,,,,as]) => ({type: "comp", name:w.value, value:  as }) %}
+comp -> "@" %word                                                   {% fmtComp %}
+      | "@" %word %s:* "(" %s:* "{" %s:* (args %s:*):? "}" %s:* ")" {% fmtComp %}
 	   
-args  -> arg (%s:? ","):? {% ([arg]) => [arg] %}
-       | arg %s:? "," %s:? args {% ([arg,,,,args]) => [arg, ...args] %}
+args -> arg (%s:* "," (%s:* args):?):?                              {% fmtArgs %}
 	   
-arg   -> word %s:? ":" %s:? anum 
-         {% ([w,,,,a]) => ({type: "named-arg", name: w.value, value: a.value}) %}
-       | word %s:? ":" %s:? "{" %s:? comp:* %s:? "}"
-	     {% ([w,,,,,c]) => ({type: "content-arg", name: w.value, value: c?.value || ''}) %}
+arg -> %word %s:* ":" %s:* (string | number)                        {% fmtNamedArg %}
+     | %word %s:* ":" %s:* "{" %s:* (comp %s:*):? "}"               {% fmtContentArg %}
 
-	   
-anum -> string {% id %} | number {% id %}
-
-# TODO strings cannot contain special. chars right now (like "-")
-string -> %q %s:? word:? %s:? %q 
-{% ([,,w]) => ({type: "string", value: w?.value || ''}) %}
-
-number -> %digit ("." %digit):?
-{% ([d1, d2]) => ({type: "number", value: [d1, ...d2 || []].join('')}) %}
-
-word -> %word {% ([w]) => ({type: "word", value: w.value.trim()}) %}
+# TODO this is not allowing special characters like - . , < > ecc...
+string -> %q %s:* (%word %s:*):? %q {% ([,,w]) => w ? w[1].value : '' %}
+number -> %digit ("." %digit):? {% ([d1, d2]) => [d1, ...d2 || []].join('') %}

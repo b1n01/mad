@@ -1,38 +1,36 @@
+
 @{%
 const moo = require("moo");
 const lexer = moo.compile({
-	ws: {match: /[\s]+/, lineBreaks: true},
+	s: {match: /[\s]/, lineBreaks: true},
 	digit: /[\d]+/,
-	openAttr: /{/,
-	closeAttr: /}/,
-	dot: ".",
-	hash: "#",
-	eq: "=",
-	word: /[\w-.]+/,
-	q: /'|"/,
+	"{":"{",
+	"}": "}",
+	".": ".",
+	"#": "#",
+	"=": "=",
+	word: /[\w]+/,
+	q: /'|"/, // this will allow apening and closing with different quotes
 	e: /[^\S\r\n]+/,
 });
 %}
 
 @lexer lexer
 	  
-attr -> %e:? %openAttr %ws:? attrs %ws:? %closeAttr
+attr -> "{" %s:* (attrs %s:*):? "}" {% ([,,attrs]) => ({type:"attrs", value: attrs[0] || []}) %}
 
 attrs -> props
-       | id                  
-       | props %ws id          
-       | id %ws props          
-       | props %ws id %ws props 
+       | id    
+       | props %s:+ id            {% ([ps,,id])       => [...ps, id]          %}           
+       | id %s:+ props            {% ([id,,ps])       => [id, ...ps]          %}
+       | props %s:+ id %s:+ props {% ([ps1,,id,,ps2]) => [...ps1, id, ...ps2] %}
 
-props -> prop | prop %ws props
+props -> (boolAtt | namedAttr | class) (%s:+ props):? {% ([d,ps]) => ps ? [d[0], ...ps[1]] : [d[0]] %}
 
-prop -> boolAtt | namedAttr | class
+boolAtt   -> %word                                 {% ([d])      => ({type:"bool-attr",  value: d.value}) %}
+namedAttr -> %word %s:* "=" %s:* (string | number) {% ([n,,,,d]) => ({type:"named-attr", value: d[0]})     %}
+class     -> "." %word                             {% ([,d])     => ({type:"class",      value: d.value}) %}
+id        -> "#" %word                             {% ([,d])     => ({type:"id",         value: d.value}) %}
 
-boolAtt -> %word
-namedAttr -> %word %ws:? %eq %ws:? anum
-class -> %dot %word
-id -> %hash %word
-
-anum -> string | number
-string -> %q %word:? %q 
-number -> %digit | %digit %dot %digit
+string -> %q %s:* %word:? %s:* %q {% ([,,w])    => w?.value || ''             %}
+number -> %digit ("." %digit):?   {% ([d1, d2]) => [d1, ...d2 || []].join('') %}
