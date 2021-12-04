@@ -1,47 +1,44 @@
 @{%
 const moo = require("moo");
 const lexer = moo.compile({
-	ws: {match: /[\s]+/, lineBreaks: true},
+	s: {match: /[\s]+/, lineBreaks: true}, // white spaces
+	q: /'|"/, // double or single quotes
 	digit: /[\d]+/,
-	openAttr: /{/,
-	closeAttr: /}/,
-	dot: ".",
-	hash: "#",
-	eq: "=",
 	word: /[\w]+/,
-	q: /'|"/,
-	e: /[^\S\r\n]+/,
-	colon: ":",
-	sc: ";",
-	dash: "-",
-	comma: ",",
+	"(": "(",
+	")": ")",
+	"{": "{",
+    "}": "}",
+	".": ".",
+	":": ":",
+	";": ";",
+	",": ",",
+	"@": "@",
 });
 %}
 
 @lexer lexer
 
-mad -> expr
-     | expr %ws:? mad 
-	 
-expr -> comp    
-
-#####
-# Components
-#####
-
-comp  -> %e:? tag 
-       | %e:? tag %ws:? %openAttr %ws:? args %ws:? %closeAttr
+comp  -> "@" word
+       | "@" word %s:? "(" %s:? "{" %s:? args:* %s:? "}" %s:? ")"
+	     {% ([,w,,,,,,as]) => ({type: "comp", name:w.value, value:  as }) %}
 	   
-args  -> arg %ws:? %comma:? 
-       | arg %ws:? %comma %ws:? args 
+args  -> arg (%s:? ","):? {% ([arg]) => [arg] %}
+       | arg %s:? "," %s:? args {% ([arg,,,,args]) => [arg, ...args] %}
 	   
-arg   -> %word %ws:? %colon %ws:? anum 
-       #| %word %ws:? ":" %ws:? %openAttr mad %closeAttr
+arg   -> word %s:? ":" %s:? anum 
+         {% ([w,,,,a]) => ({type: "named-arg", name: w.value, value: a.value}) %}
+       | word %s:? ":" %s:? "{" %s:? comp:* %s:? "}"
+	     {% ([w,,,,,c]) => ({type: "content-arg", name: w.value, value: c?.value || ''}) %}
 
-tag -> %colon %word %dash %word %sc:?
+	   
+anum -> string {% id %} | number {% id %}
 
-anum -> string | number
+# TODO strings cannot contain special. chars right now (like "-")
+string -> %q %s:? word:? %s:? %q 
+{% ([,,w]) => ({type: "string", value: w?.value || ''}) %}
 
-string -> %q %word:? %q 
+number -> %digit ("." %digit):?
+{% ([d1, d2]) => ({type: "number", value: [d1, ...d2 || []].join('')}) %}
 
-number -> %digit | %digit %dot %digit
+word -> %word {% ([w]) => ({type: "word", value: w.value.trim()}) %}

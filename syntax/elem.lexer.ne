@@ -13,7 +13,7 @@ const lexer = moo.compile({
 	italic: "__",
 	strike: "~~",
 	code: "``",
-	string: {match:/(?:(?!__|\*\*|~~|``)[^\n\r])+/, value: s => s.trim()},
+	string: /(?:(?!__|\*\*|~~|``)[^\n\r])+/,
 	NL: {match: /[\n\r]/, lineBreaks: true},
 	empty: /[^\S\r\n]/,
 });
@@ -25,7 +25,7 @@ const fmtBlock = (type, string) => ({type: type, value: string?.value || ""})
 
 @lexer lexer
 
-mad -> expr | expr %NL mad {% ([e,,m]) => [e[0], ...m] %}
+mad -> expr {% id %} | expr %NL mad {% ([e,,m]) => [e[0], ...m] %}
 
 expr -> h1 | h2 | h3 | h4 | h5 | h6 | p | blockquote | pre | e
 
@@ -38,7 +38,7 @@ h5         -> %h5 text:?   {% ([,t]) => fmtBlock("h5",         t) %}
 h6         -> %h6 text:?   {% ([,t]) => fmtBlock("h6",         t) %}
 blockquote -> %GT text:?   {% ([,t]) => fmtBlock("blockquote", t) %}
 pre        -> %pipe text:? {% ([,t]) => fmtBlock("pre",        t) %}
-p          -> text         {% ([t])   => fmtBlock("p",         t) %}
+p          -> text         {% ([t])  => fmtBlock("p",          t) %}
 
 # Inline elements
 strong -> %strong nostrong %strong {% ([,s]) => fmtInline("strong", s) %}
@@ -55,7 +55,7 @@ nostrike -> (string | strong | italic | code)           nostrike:? {% fmtText %}
 nocode   -> (string | strong | italic | strike)         nocode:?   {% fmtText %} 
 
 # Any chars in a single line except "**", "~~", "__" and "``"
-string -> %string {% ([s]) => ({type: "string", value: s.value}) %}
+string -> %string {% ([s]) => ({type: "string", value: s.value.trim('')}) %}
 
 # Any number of space on same line
 e -> %empty:? {% () => ({type:"empty"}) %}
