@@ -2,8 +2,8 @@
 const moo = require("moo");
 const lexer = moo.states({
      elem: {
-		"@": {match: /^\s*@/, push: 'comp'}, // <-- this is not working
-		"{": {match: /^\s*{/, push: 'attr'}, // <-- this is not working
+		at: {match: /^[\s]*@/, push: 'comp'}, // <-- this is not working
+		OB: {match: /^[\s]*{/, push: 'attr'}, // <-- this is not working
 		// Elememts
 		h6: /^[\s]*#{6}/,
 		h5: /^[\s]*#{5}/,
@@ -26,8 +26,8 @@ const lexer = moo.states({
 		q: /'|"/,
 		digit: /[\d]+/,
 		"(": "(",
-		")": {match: ")", pop: 1},
-		"{": "{", // diversificare questa da "({" per poter tornate a main
+		CP: {match: /\)[^\S\r\n]*/, pop: 1},
+		"{": "{", // diversificare questa da "({" per poter andare a elem
 		"}": "}",
 		".": ".",
 		":": ":",
@@ -38,8 +38,8 @@ const lexer = moo.states({
 	attr: {
 		s: {match: /[\s]/, lineBreaks: true},
 		digit: /[\d]+/,
-		"{":"{",
-		"}": {match: "}", pop: 1},
+		"{": "{",
+		CB: {match: /}[^\S\r\n]*/, pop: 1},
 		".": ".",
 		"#": "#",
 		"=": "=",
@@ -105,8 +105,8 @@ e -> %empty:? {% () => ({type:"empty"}) %}
 # Components
 #####
 
-comp -> "@" %word                                                   {% fmtComp %}
-      | "@" %word %s:* "(" %s:* "{" %s:* (args %s:*):? "}" %s:* ")" {% fmtComp %}
+comp -> %at %word                                                   {% fmtComp %}
+      | %at %word %s:* "(" %s:* "{" %s:* (args %s:*):? "}" %s:* %CP {% fmtComp %}
 	   
 args -> arg (%s:* "," (%s:* args):?):?                              {% fmtArgs %}
 	   
@@ -121,7 +121,7 @@ numberArg -> %digit ("." %digit):?     {% ([d1, d2]) => [d1, ...d2 || []].join('
 # Attribues
 #####
 
-attr -> "{" %s:* (attrs %s:*):? "}" {% ([,,attrs]) => ({type:"attrs", value: attrs[0] || []}) %}
+attr -> %OB %s:* (attrs %s:*):? %CB {% ([,,attrs]) => ({type:"attrs", value: attrs[0] || []}) %}
 
 attrs -> props
        | id    
