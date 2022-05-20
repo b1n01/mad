@@ -1,7 +1,7 @@
 const nearley = require("nearley");
 
 // Load the grammar (generated with: nearleyc syntax/mad.ne -o src/parser.js)
-const grammar = require("./parser.js");
+const grammar = require("../parser/mad.parser.js");
 
 // Convert an AST node of type "attr" to string
 const parseAttrs = (nodes) => {

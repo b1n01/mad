@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "test": "jest",
-    "compile": "nearleyc syntax/mad.ne -o src/parser.js"
+    "compile": "npm run compile-attr",
+    "compile-attr": "nearleyc syntax/attr.lexer.ne -o parser/attr.parser.js",
+    "test": "jest"
   },
   "dependencies": {
     "moo": "^0.5.1",
