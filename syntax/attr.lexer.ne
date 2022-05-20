@@ -1,5 +1,6 @@
 @{%
 // Attribute lexer definition
+//
 // Attributes is a special syntax to add html attributes to html elements 
 // There are four types of attributes: boolean attributes, named attribues,
 // ids and classes
@@ -23,7 +24,7 @@ const lexer = moo.compile({
 	// A single whitespace (space, tab or line-break)
 	s: {match: /\s/, lineBreaks: true},
 	
-	// Signed number, bot float or integer
+	// Signed number (float or integer)
 	num: /[+-]?(?:\d*\.)?\d+/, 
 
 	// A single word containing alphanumerics and "-" but starts with a char
