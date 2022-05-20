@@ -1,36 +1,47 @@
 @{%
+
+// Component lexer definition
+//
+// Example:
+// @card {
+//   name: "Luca",
+//   age: 32,
+//   content: @pic {
+//     url: 'http://asd.com'
+//   }
+// }
+
 const moo = require("moo");
 const lexer = moo.compile({
-	s: {match: /[\s]/, lineBreaks: true},
-	q: /'|"/,
-	digit: /[\d]+/,
-	word: {match: /[\w]+/, value: d => d.trim()},
-	"(": "(",
-	")": ")",
-	"{": "{",
-    "}": "}",
-	".": ".",
-	":": ":",
-	",": ",",
-	"@": "@",
+	// A single whitespace (space, tab or line-break)
+	s: {match: /\s/, lineBreaks: true},
+	
+	// Signed number, float or integer
+	num: /[+-]?(?:\d*\.)?\d+/, 
+
+	// A single word containing alphanumerics and "-" but starts with a char
+	w: /[a-z]+[\w-]*/, 
+
+	// Single and double quoted string
+	str: [
+		{match: /"(?:\\.|[^\\])*?"/, lineBreaks: true},
+		{match: /'(?:\\.|[^\\])*?'/, lineBreaks: true},
+	],
+	
+	symbols: ["{", "}", "(", ")", ".", ",", ":", "@"]
 });
 
-const fmtComp = ([,w,,,,,,as]) => ({type: "comp", name: w.value, value: as ? as[0] : [] })
-const fmtArgs = ([arg, args]) => args && args[2] ? [arg, ...args[2][1]] : [arg]
-const fmtNamedArg = ([w,,,,a]) => ({type: "named-arg", name: w.value, value: a[0]})
-const fmtContentArg = ([w,,,,,,c]) => ({type: "content-arg", name: w.value, value: c ? c[0] : []})
 %}
 
 @lexer lexer
 
-comp -> "@" %word                                                   {% fmtComp %}
-      | "@" %word %s:* "(" %s:* "{" %s:* (args %s:*):? "}" %s:* ")" {% fmtComp %}
+comp -> "@" %w                                 {% ([,w])        => ({type: "comp", name: w.value, value: null }) %}
+      | "@" %w %s:* "{" %s:* (args %s:*):? "}" {% ([,w,,,,as])  => ({type: "comp", name: w.value, value: as[0] || [] }) %}
 	   
-args -> arg (%s:* "," (%s:* args):?):?                              {% fmtArgs %}
+args -> arg (%s:* "," (%s:* args):?):?         {% ([arg, args]) => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
 	   
-arg -> %word %s:* ":" %s:* (string | number)                        {% fmtNamedArg %}
-     | %word %s:* ":" %s:* "{" %s:* (comp %s:*):? "}"               {% fmtContentArg %}
+arg -> %w %s:* ":" %s:* (str | num)            {% ([w,,,,a])    => ({type: "alphanum-arg", name: w.value, value: a[0]}) %}
+     | %w %s:* ":" %s:* comp                   {% ([w,,,,c])    => ({type: "comp-arg", name: w.value, value: c}) %}
 
-# TODO this is not allowing special characters like - . , < > ecc...
-string -> %q %s:* (%word %s:*):? %q {% ([,,w]) => w ? w[1].value : '' %}
-number -> %digit ("." %digit):? {% ([d1, d2]) => [d1, ...d2 || []].join('') %}
+str -> %str {% ([n]) => n.value %}
+num -> %num {% ([n]) => n.value %}
