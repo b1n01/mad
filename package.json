@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "compile": "npm run compile-attr",
+    "compile": "npm run compile-attr & npm run compile-comp",
     "compile-attr": "nearleyc syntax/attr.lexer.ne -o parser/attr.parser.js",
+    "compile-comp": "nearleyc syntax/comp.lexer.ne -o parser/comp.parser.js",
     "test": "jest"
   },
   "dependencies": {
