@@ -3,8 +3,8 @@
 (function () {
 function id(x) { return x[0]; }
 
-
 // Attribute lexer definition
+//
 // Attributes is a special syntax to add html attributes to html elements 
 // There are four types of attributes: boolean attributes, named attribues,
 // ids and classes
@@ -13,7 +13,7 @@ function id(x) { return x[0]; }
 // # Hello {hidden} -> <h1 hidden>Hello</h1>
 //
 // Named attribute is an attribue with a name and a value:
-// > Hello {cite="hello.com"} -> <blockquote cite="hello.com">Hello</blockquote>
+// > Hello {cite="hello.ai"} -> <blockquote cite="hello.ai">Hello</blockquote>
 // 
 // Id is the unique identifier for an HTML element. It uses the special 
 // hashtag "#" syntax. Only one id per element can be defined:
@@ -25,16 +25,16 @@ function id(x) { return x[0]; }
 
 const moo = require("moo");
 const lexer = moo.compile({
-	// a single whitespace (space, tab or line-break)
+	// A single whitespace (space, tab or line-break)
 	s: {match: /\s/, lineBreaks: true},
 	
-	// signed number, bot float or integer
+	// Signed number (float or integer)
 	num: /[+-]?(?:\d*\.)?\d+/, 
 
-	// a single word containing alphanumerics and "-" but starts with a char
+	// A single word containing alphanumerics and "-" but starts with a char
 	w: /[a-z]+[\w-]*/, 
 
-	// single and double quoted string
+	// Single and double quoted string
 	str: [
 		{match: /"(?:\\.|[^\\])*?"/, lineBreaks: true},
 		{match: /'(?:\\.|[^\\])*?'/, lineBreaks: true},
