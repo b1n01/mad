@@ -44,6 +44,16 @@ const tests = [
     o: [{ type: "blockquote", value: [{ type: "string", value: "Hello" }] }],
   },
   {
+    t: "Pre",
+    i: ["| Hello"],
+    o: [
+      {
+        type: "pre",
+        value: [{ type: "string", value: "Hello" }],
+      },
+    ],
+  },
+  {
     t: "Strong",
     i: ["**Hello**"],
     o: [
@@ -90,8 +100,8 @@ const tests = [
     ],
   },
   {
-    t: "H1 with strong",
-    i: ["# **Hello**"],
+    t: "h1 with strong",
+    i: ["#**Hello**"],
     o: [
       {
         type: "h1",
