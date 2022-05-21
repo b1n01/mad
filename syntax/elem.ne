@@ -21,14 +21,14 @@ const lexer = moo.compile({
 
 const fmtText = ([s,t]) => ({type: "text", value: [s[0], ...t?.value || []]}) 
 const fmtInline = (type, string) => ({type:type, value: string.value})
-const fmtBlock = (type, string) => ({type: type, value: string?.value || ""})
+const fmtBlock = (type, string) => ({type: type, value: string?.value || []})
 %}
 
 @lexer lexer
 
-mad -> expr {% id %} | expr %NL mad {% ([e,,m]) => [e[0], ...m] %}
+#elems -> elem {% id %} | elem %NL elems {% ([e,,m]) => [e[0], ...m] %}
 
-expr -> h1 | h2 | h3 | h4 | h5 | h6 | p | blockquote | pre | e
+elem -> h1 | h2 | h3 | h4 | h5 | h6 | p | blockquote | pre | e
 
 # Blocks elements
 h1         -> %h1 text:?   {% ([,t]) => fmtBlock("h1",         t) %}
