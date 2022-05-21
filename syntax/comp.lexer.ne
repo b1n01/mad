@@ -35,7 +35,7 @@ const lexer = moo.compile({
 
 @lexer lexer
 
-comp -> "@" %w                                 {% ([,w])        => ({type: "comp", name: w.value, value: null }) %}
+comp -> "@" %w                                 {% ([,w])        => ({type: "comp", name: w.value, value: [] }) %}
       | "@" %w %s:* "{" %s:* (args %s:*):? "}" {% ([,w,,,,as])  => ({type: "comp", name: w.value, value: as[0] || [] }) %}
 	   
 args -> arg (%s:* "," (%s:* args):?):?         {% ([arg, args]) => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
