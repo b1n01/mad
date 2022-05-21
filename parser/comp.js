@@ -26,7 +26,7 @@ const lexer = moo.compile({
 var grammar = {
     Lexer: lexer,
     ParserRules: [
-    {"name": "comp", "symbols": [{"literal":"@"}, (lexer.has("wrd") ? {type: "wrd"} : wrd)], "postprocess": ([,w])        => ({type: "comp", name: w.value, value: [] })},
+    {"name": "comp", "symbols": [{"literal":"@"}, (lexer.has("wrd") ? {type: "wrd"} : wrd)], "postprocess": ([,w])        => ([{type: "comp", name: w.value, value: [] }])},
     {"name": "comp$ebnf$1", "symbols": []},
     {"name": "comp$ebnf$1", "symbols": ["comp$ebnf$1", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "comp$ebnf$2", "symbols": []},
@@ -36,7 +36,7 @@ var grammar = {
     {"name": "comp$ebnf$3$subexpression$1", "symbols": ["args", "comp$ebnf$3$subexpression$1$ebnf$1"]},
     {"name": "comp$ebnf$3", "symbols": ["comp$ebnf$3$subexpression$1"], "postprocess": id},
     {"name": "comp$ebnf$3", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "comp", "symbols": [{"literal":"@"}, (lexer.has("wrd") ? {type: "wrd"} : wrd), "comp$ebnf$1", {"literal":"{"}, "comp$ebnf$2", "comp$ebnf$3", {"literal":"}"}], "postprocess": ([,w,,,,as])  => ({type: "comp", name: w.value, value: as[0] || [] })},
+    {"name": "comp", "symbols": [{"literal":"@"}, (lexer.has("wrd") ? {type: "wrd"} : wrd), "comp$ebnf$1", {"literal":"{"}, "comp$ebnf$2", "comp$ebnf$3", {"literal":"}"}], "postprocess": ([,w,,,,as])  => ([{type: "comp", name: w.value, value: as[0] || [] }])},
     {"name": "args$ebnf$1$subexpression$1$ebnf$1", "symbols": []},
     {"name": "args$ebnf$1$subexpression$1$ebnf$1", "symbols": ["args$ebnf$1$subexpression$1$ebnf$1", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "args$ebnf$1$subexpression$1$ebnf$2$subexpression$1$ebnf$1", "symbols": []},

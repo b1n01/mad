@@ -101,7 +101,7 @@ const tests = [
   },
   {
     t: "h1 with strong",
-    i: ["#**Hello**"],
+    i: ["# **Hello**"],
     o: [
       {
         type: "h1",

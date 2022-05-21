@@ -1,4 +1,4 @@
-# Attribute syntax definition
+# Attributes syntax definition
 #
 # Attributes let's you add html attributes to html elements.
 # There are four types of attributes: boolean attributes, named attribues,
