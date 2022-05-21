@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require("fs").promises;
-const compile = require("../src/mad.compiler.js");
+const compile = require("../src/compiler.js");
 
 (async () => {
   const file = process.argv[2];

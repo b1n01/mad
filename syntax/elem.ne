@@ -1,7 +1,8 @@
 @{%
 const moo = require("moo");
 const lexer = moo.compile({
-	h6: /^[\s]*#{6}/,
+  // Elements lexer
+  h6: /^[\s]*#{6}/,
 	h5: /^[\s]*#{5}/,
 	h4: /^[\s]*#{4}/,
 	h3: /^[\s]*#{3}/,

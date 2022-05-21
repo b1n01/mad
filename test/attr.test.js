@@ -1,5 +1,5 @@
 const nearley = require("nearley");
-const grammar = require("../parser/attr.parser.js");
+const grammar = require("../parser/attr.js");
 const exception = "EXCEPTION";
 
 const tests = [
@@ -223,12 +223,12 @@ tests.forEach(({ t: label, i: inputs, o: output }) => {
     inputs.forEach((input) => {
       parser.feed(input);
       const results = parser.results;
-      test(label, () => expect(results[0].value).toEqual(output));
-      // Test that the given input didn't procude more than one output
+      test(label, () => expect(results[0]).toEqual(output));
+      // Test that the given input didn't produce more than one output
       test(`Ambiguity for ${label}`, () => expect(results.length).toBe(1));
     });
   } catch (e) {
-    // If the parser throws an exception check if was expected
+    // If the parser throws an exception check if it was expected
     if (output === exception) {
       test(label, () => expect(true).toBe(true));
     } else {

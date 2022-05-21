@@ -1,5 +1,5 @@
 const nearley = require("nearley");
-const grammar = require("../parser/comp.parser.js");
+const grammar = require("../parser/comp.js");
 const exception = "EXCEPTION";
 
 const tests = [

@@ -84,7 +84,7 @@ h3    -> %h3 text:?   {% ([,t]) => fmtBlock("h3",    t) %}
 h4    -> %h4 text:?   {% ([,t]) => fmtBlock("h4",    t) %}
 h5    -> %h5 text:?   {% ([,t]) => fmtBlock("h5",    t) %}
 h6    -> %h6 text:?   {% ([,t]) => fmtBlock("h6",    t) %}
-quote -> %GT text:?   {% ([,t]) => fmtBlock("quote", t) %}
+quote -> %GT text:?   {% ([,t]) => fmtBlock("blockquote", t) %}
 pre   -> %pipe text:? {% ([,t]) => fmtBlock("pre",   t) %}
 p     -> text         {% ([t])  => fmtBlock("p",     t) %}
 
