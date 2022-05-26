@@ -33,7 +33,7 @@ var grammar = {
     {"name": "attr$ebnf$2$subexpression$1", "symbols": ["attrs", "attr$ebnf$2$subexpression$1$ebnf$1"]},
     {"name": "attr$ebnf$2", "symbols": ["attr$ebnf$2$subexpression$1"], "postprocess": id},
     {"name": "attr$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "attr", "symbols": [{"literal":"{"}, "attr$ebnf$1", "attr$ebnf$2", {"literal":"}"}], "postprocess": ([,,attrs])      => attrs[0] || []},
+    {"name": "attr", "symbols": [{"literal":"{"}, "attr$ebnf$1", "attr$ebnf$2", {"literal":"}"}], "postprocess": ([,,attrs])      => attrs?.[0] || []},
     {"name": "attrs", "symbols": ["props"], "postprocess": ([ps])           => [...ps]},
     {"name": "attrs", "symbols": ["id"], "postprocess": ([id])           => [id]},
     {"name": "attrs$ebnf$1", "symbols": [(lexer.has("_") ? {type: "_"} : _)]},

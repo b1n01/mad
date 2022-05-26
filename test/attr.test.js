@@ -4,6 +4,11 @@ const exception = "EXCEPTION";
 
 const tests = [
   {
+    t: "Empty attributes",
+    i: "{}",
+    o: [],
+  },
+  {
     t: "Class",
     i: "{.class}",
     o: [{ type: "class", value: "class" }],

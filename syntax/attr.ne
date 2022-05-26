@@ -43,7 +43,7 @@ const lexer = moo.compile({
 
 @lexer lexer	  
          
-attr -> "{" %_:* (attrs %_:*):? "}"                   {% ([,,attrs])      => attrs[0] || [] %}
+attr -> "{" %_:* (attrs %_:*):? "}"                   {% ([,,attrs])      => attrs?.[0] || [] %}
 
 attrs -> props                                        {% ([ps])           => [...ps]              %}    
        | id                                           {% ([id])           => [id]                 %}  
