@@ -1,11 +1,8 @@
 @{%
 // TODO 
 // - string cannot contain "/{" or "\@"
-// - match components
-// - handle multiple lines
 // - handle comments
-// - empty comp are not working because we pop the state only with "}"
-// - now we are using ";" to end an empty components, can we use a sub state?
+
 
 const moo = require("moo");
 const lexer = moo.states({
@@ -27,11 +24,10 @@ const lexer = moo.states({
 		code: "``",
 		NL: {match: /[\n\r]/, lineBreaks: true}, // New line
 		e: /[^\S\r\n]/,
-		string: /(?:(?!__|\*\*|~~|``)[^\n\r])+/, // TODO scaped braces "\{|" and "\@" should be allowed
+		string: /(?:(?!__|\*\*|~~|``|{|@)[^\n\r])+/, // todo scaped braces "\{|" and "\@" should be allowed
 	},
 	attr: {
-		// Go back to element
-		CB: {match: /}/, pop: 1}, 
+		CB: {match: /}/, pop: 1}, // Go back to element
 		
 		// A single whitespace (space, tab or line-break)
 		_: { match: /\s/, lineBreaks: true },
@@ -52,52 +48,57 @@ const lexer = moo.states({
 		symbols: ["{", "}", ".", "#", "="],
 	},
 	comp: {
-		NL: {match: /[\n\r]/, lineBreaks: true, pop: 1}, // New line
-		OB: {match: /{/, push: 'comp-content'}, // Go to comp-content state
+	  NL: {match: /[\n\r]/, lineBreaks: true, pop: 1}, // New line
+	  OB: {match: /{/, push: 'comp-content'}, // Go to comp-content state
 
-		// A single whitespace (space, tab or line-break)
-		_: { match: /\s/, lineBreaks: true },
+	  // A single whitespace (space, tab or line-break)
+	  _: { match: /\s/, lineBreaks: true },
 
-		// A single word containing alphanumeric characters and "-" but starts with a char
-		wrd: /[a-z]+[\w-]*/,
+	  // A single word containing alphanumeric characters and "-" but starts with a char
+	  wrd: /[a-z]+[\w-]*/,
 
-		// Symbols
-		symbols: ["{", "@"],
+	  // Symbols
+	  symbols: ["{", "@"],
 	},
 	"comp-content": {
-		// Go back to comp
-		CB: {match: /}/, pop: 1}, 
+	  CB: {match: /}/, pop: 1}, // Go back to element
+		
+	  // A single whitespace (space, tab or line-break)
+	  _: { match: /\s/, lineBreaks: true },
 
-		// A single whitespace (space, tab or line-break)
-		_: { match: /\s/, lineBreaks: true },
+	  // Signed float or integer
+	  num: /[+-]?(?:\d*\.)?\d+/,
 
-		// Signed float or integer
-		num: /[+-]?(?:\d*\.)?\d+/,
+	  // A single word containing alphanumeric characters and "-" but starts with a char
+	  wrd: /[a-z]+[\w-]*/,
 
-		// A single word containing alphanumeric characters and "-" but starts with a char
-		wrd: /[a-z]+[\w-]*/,
-
-		// Single and double quoted string that allows escaped quotes
-		str: [
+	  // Single and double quoted string that allows escaped quotes
+	  str: [
 		{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
 		{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
-		],
+	  ],
 
-		// Symbols
-		symbols: ["{", "}", ",", ":"],
+	  // Symbols
+	  symbols: ["{", "}", ",", ":"],
 	},
 });
 
-const fmtText = 	([s,,t]) 		=> ({type: "text", value: [s[0], ...t?.value || []]}) 
-const fmtInline = 	(type, string) 	=> ({type:type, value: string.value})
-const fmtBlock = 	(type, string) 	=> ({type: type, value: string?.value || []})
+const fmtText = ([s,,t]) => ({type: "text", value: [s[0], ...t?.value || []]}) 
+const fmtInline = (type, string) => ({type:type, value: string.value})
+const fmtBlock = (type, string) => ({type: type, value: string?.value || []})
+
+const fmtElement   = (type, value, attrs) => ({category: "element",   type,       value, attrs})
+const fmtTerminal  = (type, value)        => ({category: "terminal",  type,       value       })
+//onst fmtInline    = (type, value)        => ({category: "inline",    type,       value       })
+const fmtAttribute = (type, name, value)  => ({category: "attribute", type, name, value       })
+const fmtComponent = (name, value)        => ({category: "component", type,       value       })
+const fmtArgument  = (type, name, value)  => ({category: "argument",  type, name, value       })
 
 %}
 
 @lexer lexer
 
-mad -> exp 			{% id %} 
-	 | exp %NL mad 	{% ([e,,m]) => [e[0], ...m] %}
+mad -> exp {% id %} | exp %NL mad {% ([e,,m]) => [e[0], ...m] %}
 
 exp -> elem | comp | e
 
