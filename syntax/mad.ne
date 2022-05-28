@@ -1,7 +1,9 @@
 @{%
 // TODO 
-// - string cannot contain "/{" or "\@"
+// - "string" cannot contain "/{" or "\@"
 // - handle comments
+// - components inside components are not working!!!
+// - argument of type string have quotes inside the value field? Should we remove them?
 
 
 const moo = require("moo");
@@ -62,6 +64,7 @@ const lexer = moo.states({
 	},
 	"comp-content": {
 	  CB: {match: /}/, pop: 1}, // Go back to element
+	  AT: {match: /@/, push: 'comp'}, // Go to attribute state
 		
 	  // A single whitespace (space, tab or line-break)
 	  _: { match: /\s/, lineBreaks: true },
@@ -79,19 +82,16 @@ const lexer = moo.states({
 	  ],
 
 	  // Symbols
-	  symbols: ["{", "}", ",", ":"],
+	  symbols: ["{", "}", ",", ":", "@"],
 	},
 });
 
-const fmtText = ([s,,t]) => ({type: "text", value: [s[0], ...t?.value || []]}) 
-const fmtInline = (type, string) => ({type:type, value: string.value})
-const fmtBlock = (type, string) => ({type: type, value: string?.value || []})
 
 const fmtElement   = (type, value, attrs) => ({category: "element",   type,       value, attrs})
 const fmtTerminal  = (type, value)        => ({category: "terminal",  type,       value       })
-//onst fmtInline    = (type, value)        => ({category: "inline",    type,       value       })
+const fmtInline    = (type, value)        => ({category: "inline",    type,       value       })
 const fmtAttribute = (type, name, value)  => ({category: "attribute", type, name, value       })
-const fmtComponent = (name, value)        => ({category: "component", type,       value       })
+const fmtComponent = (name, value)        => ({category: "component",       name, value       })
 const fmtArgument  = (type, name, value)  => ({category: "argument",  type, name, value       })
 
 %}
@@ -106,38 +106,38 @@ exp -> elem | comp | e
 # Elements
 ##########
 
-elem -> (h1 | h2 | h3 | h4 | h5 | h6 | p | blockquote | pre) (attr %e:*):? {% ([e,a]) => ({type: "elem", value: e[0], attr: a?.[0] || []}) %}
+elem -> (h1 | h2 | h3 | h4 | h5 | h6 | p | blockquote | pre) (attr %e:*):? {% ([b,a]) => fmtElement(b[0].type, b[0].value, a?.[0] || []) %}
 
 # Blocks elements
-h1         -> %h1   %e:* text:? {% ([,,t]) => fmtBlock("h1",         t) %}
-h2         -> %h2   %e:* text:? {% ([,,t]) => fmtBlock("h2",         t) %}
-h3         -> %h3   %e:* text:? {% ([,,t]) => fmtBlock("h3",         t) %}
-h4         -> %h4   %e:* text:? {% ([,,t]) => fmtBlock("h4",         t) %}
-h5         -> %h5   %e:* text:? {% ([,,t]) => fmtBlock("h5",         t) %}
-h6         -> %h6   %e:* text:? {% ([,,t]) => fmtBlock("h6",         t) %}
-blockquote -> %GT   %e:* text:? {% ([,,t]) => fmtBlock("blockquote", t) %}
-pre        -> %pipe %e:* text:? {% ([,,t]) => fmtBlock("pre",        t) %}
-p          -> %e:* text         {% ([,t])  => fmtBlock("p",          t) %}
+h1         -> %h1   %e:* text:? {% ([,,t]) => ({type: "h1",    value: t?.value || []}) %}
+h2         -> %h2   %e:* text:? {% ([,,t]) => ({type: "h2",    value: t?.value || []}) %}
+h3         -> %h3   %e:* text:? {% ([,,t]) => ({type: "h3",    value: t?.value || []}) %}
+h4         -> %h4   %e:* text:? {% ([,,t]) => ({type: "h4",    value: t?.value || []}) %}
+h5         -> %h5   %e:* text:? {% ([,,t]) => ({type: "h5",    value: t?.value || []}) %}
+h6         -> %h6   %e:* text:? {% ([,,t]) => ({type: "h6",    value: t?.value || []}) %}
+blockquote -> %GT   %e:* text:? {% ([,,t]) => ({type: "quote", value: t?.value || []}) %}
+pre        -> %pipe %e:* text:? {% ([,,t]) => ({type: "pre",   value: t?.value || []}) %}
+p          ->       %e:* text   {% ([,t])  => ({type: "p",     value: t?.value || []}) %}
 
 # Inline elements
-strong -> %strong %e:* nostrong %strong {% ([,,s]) => fmtInline("strong", s) %}
-italic -> %italic %e:* noitalic %italic {% ([,,s]) => fmtInline("italic", s) %}
-strike -> %strike %e:* nostrike %strike {% ([,,s]) => fmtInline("strike", s) %}
-code   -> %code   %e:* nocode   %code   {% ([,,s]) => fmtInline("code",   s) %}
+strong -> %strong %e:* nostrong %strong {% ([,,s]) => fmtInline("strong", s.value) %}
+italic -> %italic %e:* noitalic %italic {% ([,,s]) => fmtInline("italic", s.value) %}
+strike -> %strike %e:* nostrike %strike {% ([,,s]) => fmtInline("strike", s.value) %}
+code   -> %code   %e:* nocode   %code   {% ([,,s]) => fmtInline("code",   s.value) %}
 
 # "text" is a single line of text containing all inline blocks. The others are 
 # line of texts containing all inline blocks except for themself
-text     -> (string | strong | italic | strike | code) %e:* text:?     {% fmtText %} 
-nostrong -> (string | italic | strike | code)          %e:* nostrong:? {% fmtText %} 
-noitalic -> (string | strong | strike | code)          %e:* noitalic:? {% fmtText %} 
-nostrike -> (string | strong | italic | code)          %e:* nostrike:? {% fmtText %} 
-nocode   -> (string | strong | italic | strike)        %e:* nocode:?   {% fmtText %} 
+text     -> (string | strong | italic | strike | code) %e:* text:?     {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+nostrong -> (string | italic | strike | code)          %e:* nostrong:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+noitalic -> (string | strong | strike | code)          %e:* noitalic:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+nostrike -> (string | strong | italic | code)          %e:* nostrike:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+nocode   -> (string | strong | italic | strike)        %e:* nocode:?   {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
 
 # Any chars in a single line except "**", "~~", "__" and "``"
-string -> %string {% ([s]) => ({type: "string", value: s.value.trim('')}) %}
+string -> %string {% ([s]) => fmtTerminal("string", s.value.trim('')) %}
 
 # Any number of space on same line
-e -> %e:* {% () => ({type:"empty"}) %}
+e -> %e:* {% () => fmtTerminal("empty", null) %} 
 
 ############
 # Attributes
@@ -153,25 +153,27 @@ attrs -> props                                        {% ([ps])           => [..
 
 props -> (boolAtt | namedAttr | class) (%_:+ props):? {% ([d, ps])        => ps ? [d[0], ...ps[1]] : [d[0]] %}
 
-boolAtt   ->     %wrd                                 {% ([d])            => ({type:"bool-attr",  value: d.value})             %}
-namedAttr ->     %wrd %_:* "=" %_:* (str | num)       {% ([n,,,,d])       => ({type:"named-attr", name: n.value, value: d[0]}) %}
-class     -> "." %wrd                                 {% ([,d])           => ({type:"class",      value: d.value})             %}
-id        -> "#" %wrd                                 {% ([,d])           => ({type:"id",         value: d.value})             %}
+boolAtt   ->     %wrd                                 {% ([d])            => fmtAttribute("bool",  null,    d.value) %}
+namedAttr ->     %wrd %_:* "=" %_:* (str | num)       {% ([n,,,,d])       => fmtAttribute("named", n.value, d[0])    %}
+class     -> "." %wrd                                 {% ([,d])           => fmtAttribute("class", null,    d.value) %}
+id        -> "#" %wrd                                 {% ([,d])           => fmtAttribute("id",    null,    d.value) %}
 
-#str -> %str  {% ([n]) => n.value %}
-#num -> %num  {% ([n]) => n.value %}
 
 ############
 # Components
 ############
 
-comp -> "@" %wrd %_:*                                 {% ([,w])        => ([{type: "comp", name: w.value, value: [] }])            %}
-      | "@" %wrd %_:* "{" %_:* (args %_:*):? "}" %_:* {% ([,w,,,,as])  => ([{type: "comp", name: w.value, value: as?.[0] || [] }]) %}
+comp -> "@" %wrd %_:*                                 {% ([,w])        => fmtComponent(w.value, [])                %}
+      | "@" %wrd %_:* "{" %_:* (args %_:*):? "}" %_:* {% ([,w,,,,as])  => fmtComponent(w.value, as?.[0] || [])     %}
 	   
-args -> arg (%_:* "," (%_:* args):?):?                {% ([arg, args]) => args?.[2] ? [arg, ...args[2][1]] : [arg]                 %}
+args -> arg (%_:* "," (%_:* args):?):?                {% ([arg, args]) => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
 	   
-arg -> %wrd %_:* ":" %_:* (str | num)                 {% ([w,,,,a])    => ({type: "alphanum-arg", name: w.value, value: a[0]})     %}
-     | %wrd %_:* ":" %_:* comp                        {% ([w,,,,c])    => ({type: "comp-arg", name: w.value, value: c})            %}
+arg -> %wrd %_:* ":" %_:* (str | num)                 {% ([w,,,,a])    => fmtArgument("string", w.value, a[0])     %}
+     | %wrd %_:* ":" %_:* comp                        {% ([w,,,,c])    => fmtArgument("comp",   w.value,  c)       %}
+
+#########
+# Utility
+#########
 
 str -> %str  {% ([n]) => n.value %}
 num -> %num  {% ([n]) => n.value %}
