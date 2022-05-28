@@ -1,20 +1,25 @@
 @{%
 // TODO 
-// - string canno t contain "/{"
+// - string cannot contain "/{" or "\@"
 // - match components
 // - handle multiple lines
+// - handle comments
+// - empty comp are not working because we pop the state only with "}"
+// - now we are using ";" to end an empty components, can we use a sub state?
+
 
 const moo = require("moo");
 const lexer = moo.states({
   	// Elements lexer
 	elem: {
 		OB: {match: /{/, push: 'attr'}, // Go to attribute state
+		AT: {match: /@/, push: 'comp'}, // Go to attribute state
 		h6: /^[\s]*#{6}/,
 		h5: /^[\s]*#{5}/,
 		h4: /^[\s]*#{4}/,
 		h3: /^[\s]*#{3}/,
 		h2: /^[\s]*#{2}/,
-		h1: /^[\s]*#/,
+		h1: /^[^\S\r\n]*#/, // todo should we use this that is not including new lines???
 		GT: /^[\s]*>/,
 		pipe: /^[\s]*\|/,
 		strong: "**",
@@ -23,7 +28,7 @@ const lexer = moo.states({
 		code: "``",
 		NL: {match: /[\n\r]/, lineBreaks: true}, // New line
 		e: /[^\S\r\n]/,
-		string: /(?:(?!__|\*\*|~~|``|{)[^\n\r])+/, // todo scaped braces "\{|" should be allowed
+		string: /(?:(?!__|\*\*|~~|``|{)[^\n\r])+/, // todo scaped braces "\{|" and "\@" should be allowed
 	},
 	attr: {
 		CB: {match: /}/, pop: 1}, // Go back to element
@@ -39,12 +44,36 @@ const lexer = moo.states({
 
 		// Single and double quoted string that allows escaped quotes
 		str: [
-		{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
-		{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
+			{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
+			{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
 		],
 
 		// Symbols
 		symbols: ["{", "}", ".", "#", "="],
+	},
+	comp: {
+	  CB: {match: /}/, pop: 1}, // Go back to element
+	  SC: {match: /;/, pop: 1}, // Go back to element
+	  //NL: {match: /[\n\r]/, lineBreaks: true, pop: 1 }, // New line
+
+	  // A single whitespace (space, tab or line-break)
+	  _: { match: /\s/, lineBreaks: true },
+	  //_: { match: /[^\S\r\n]/, lineBreaks: true },
+
+	  // Signed float or integer
+	  num: /[+-]?(?:\d*\.)?\d+/,
+
+	  // A single word containing alphanumeric characters and "-" but starts with a char
+	  wrd: /[a-z]+[\w-]*/,
+
+	  // Single and double quoted string that allows escaped quotes
+	  str: [
+		{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
+		{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
+	  ],
+
+	  // Symbols
+	  symbols: ["{", "}", "@", ",", ":", ";"],	
 	}
 });
 
@@ -58,13 +87,13 @@ const fmtBlock = (type, string) => ({type: type, value: string?.value || []})
 
 mad -> exp {% id %} | exp %NL mad {% ([e,,m]) => [e[0], ...m] %}
 
-exp -> elem 
+exp -> elem | comp | e
 
 ##########
 # Elements
 ##########
 
-elem -> (h1 | h2 | h3 | h4 | h5 | h6 | p | blockquote | pre | e) (attr %e:*):? {% ([e,a]) => ({type: "elem", value: e[0], attr: a?.[0] || []}) %}
+elem -> (h1 | h2 | h3 | h4 | h5 | h6 | p | blockquote | pre) (attr %e:*):? {% ([e,a]) => ({type: "elem", value: e[0], attr: a?.[0] || []}) %}
 
 # Blocks elements
 h1         -> %h1   %e:* text:? {% ([,,t]) => fmtBlock("h1",         t) %}
@@ -115,6 +144,21 @@ boolAtt   -> %wrd                                     {% ([d])            => ({t
 namedAttr -> %wrd %_:* "=" %_:* (str | num)           {% ([n,,,,d])       => ({type:"named-attr", name: n.value, value: d[0]}) %}
 class     -> "." %wrd                                 {% ([,d])           => ({type:"class",      value: d.value})             %}
 id        -> "#" %wrd                                 {% ([,d])           => ({type:"id",         value: d.value})             %}
+
+#str -> %str  {% ([n]) => n.value %}
+#num -> %num  {% ([n]) => n.value %}
+
+############
+# Components
+############
+
+comp -> "@" %wrd ";"                          {% ([,w])        => ([{type: "comp", name: w.value, value: [] }]) %}
+      | "@" %wrd %_:* "{" %_:* (args %_:*):? "}" {% ([,w,,,,as])  => ([{type: "comp", name: w.value, value: as?.[0] || [] }]) %}
+	   
+args -> arg (%_:* "," (%_:* args):?):?           {% ([arg, args]) => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
+	   
+arg -> %wrd %_:* ":" %_:* (str | num)            {% ([w,,,,a])    => ({type: "alphanum-arg", name: w.value, value: a[0]}) %}
+     | %wrd %_:* ":" %_:* comp                   {% ([w,,,,c])    => ({type: "comp-arg", name: w.value, value: c}) %}
 
 str -> %str  {% ([n]) => n.value %}
 num -> %num  {% ([n]) => n.value %}
