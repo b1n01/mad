@@ -5,7 +5,6 @@
 // - components inside components are not working!!!
 // - argument of type string have quotes inside the value field? Should we remove them?
 
-
 const moo = require("moo");
 const lexer = moo.states({
   	// Elements lexer
