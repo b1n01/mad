@@ -20,6 +20,14 @@ const inlines = [
   ["``", "code"],
 ];
 
+const getEmptyTests = () => [
+  {
+    t: "Empty line",
+    i: ["", " "],
+    o: [{ category: "terminal", type: "empty", value: null }],
+  },
+];
+
 const elementTests = (symbol, tag) => [
   {
     t: `Element ${tag}`,
