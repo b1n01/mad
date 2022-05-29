@@ -129,11 +129,56 @@ const getElementTests = () => {
   return tests;
 };
 
-const getEmptyTests = () => [
+const getComponentTests = () => [
   {
-    t: "Empty line",
-    i: ["", " "],
-    o: [{ category: "terminal", type: "empty", value: null }],
+    t: "Empty component",
+    i: ["@comp", "@comp "], // TODO add a space before the @
+    o: [
+      {
+        category: "component",
+        name: "comp",
+        value: [],
+      },
+    ],
+  },
+  {
+    t: "Component",
+    i: [
+      `@comp{arg:'val',arg2:"val",arg3:3,arg4:.4}`,
+      `@comp { arg : 'val' , arg2 : "val" , arg3 : 3 , arg4 : .4 } `, // TODO add a space before the @
+    ],
+    o: [
+      {
+        category: "component",
+        name: "comp",
+        value: [
+          {
+            category: "argument",
+            type: "string",
+            name: "arg",
+            value: "val",
+          },
+          {
+            category: "argument",
+            type: "string",
+            name: "arg2",
+            value: "val",
+          },
+          {
+            category: "argument",
+            type: "string",
+            name: "arg3",
+            value: "3",
+          },
+          {
+            category: "argument",
+            type: "string",
+            name: "arg4",
+            value: ".4",
+          },
+        ],
+      },
+    ],
   },
 ];
 
@@ -142,6 +187,7 @@ const getTests = () => {
 
   tests.push(...getEmptyTests());
   tests.push(...getElementTests());
+  tests.push(...getComponentTests());
 
   return tests;
 };
