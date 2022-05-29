@@ -1,68 +1,90 @@
 const nearley = require("nearley");
 const grammar = require("../parser/mad.js");
 
-// Abstract syntax tree nodes
+const elements = [
+  ["#", "h1"],
+  ["##", "h2"],
+  ["###", "h3"],
+  ["####", "h4"],
+  ["#####", "h5"],
+  ["######", "h6"],
+  [">", "quote"],
+  ["|", "pre"],
+  ["", "p"],
+];
 
-// ELEMENT
-// {category: "element", type: "p"|"h1"|"h2"|"h3"|"h4"|"h5"|"h6"|"quote"|"pre", value: [TERMINAL|INLINE], attrs: [ATTRIBUTE]}
+const inlines = [
+  ["**", "strong"],
+  ["__", "italic"],
+  ["~~", "strike"],
+  ["``", "code"],
+];
 
-// TERMINAL
-// {category: "terminal", type: "empty"|"string", value: STRING|NULL}
-
-// INLINE
-// {category: "inline", type: "strong"|"italic"|"strike"|"code", value: [TERMINAL|INLINE]}
-
-// ATTRIBUTE
-// {category: "attribute", type: "id"|"class"|"bool"|"named", name: STRING|NULL, value: STRING|NULL}
-
-// COMPONENT
-// {category: "component", name: STRING, value:[ARGUMENT]}
-
-// ARGUMENT
-// {category: "argument", type: "string"|"component", name: STRING, value: STRING|COMPONENT}
-
-const tests = [
+const elementTests = (symbol, tag) => [
   {
-    t: "Empty line",
-    i: [""],
-    o: [{ category: "terminal", type: "empty", value: null }],
-  },
-  {
-    t: "Paragraph",
-    i: ["Hello"],
+    t: `Element ${tag}`,
+    i: [`${symbol}Hello`, ` ${symbol} Hello `],
     o: [
       {
         category: "element",
-        type: "p",
+        type: tag,
         value: [{ category: "terminal", type: "string", value: "Hello" }],
         attrs: [],
       },
     ],
   },
   {
-    t: "Paragraph with attributes",
-    i: ["Hello {hidden}"],
+    t: `Element ${tag} with empty attributes`,
+    i: [`${symbol}Hello{}`, ` ${symbol} Hello { } `],
     o: [
       {
         category: "element",
-        type: "p",
-        value: [{ type: "string", value: "Hello" }],
-        attrs: [{ type: "bool", value: "hidden" }],
+        type: tag,
+        value: [{ category: "terminal", type: "string", value: "Hello" }],
+        attrs: [],
       },
     ],
   },
   {
-    t: "Paragraph with inline content",
-    i: ["Hello **World**"],
+    t: `Element ${tag} with attributes`,
+    i: [`${symbol}Hello{a b=1 .c #d }`, ` ${symbol} Hello { a b=1 .c #d } `],
     o: [
       {
         category: "element",
-        type: "p",
+        type: tag,
+        value: [{ category: "terminal", type: "string", value: "Hello" }],
+        attrs: [
+          { category: "attribute", type: "bool", name: null, value: "a" },
+          { category: "attribute", type: "named", name: "b", value: "1" },
+          {
+            category: "attribute",
+            type: "class",
+            name: null,
+            value: "c",
+          },
+          { category: "attribute", type: "id", name: null, value: "d" },
+        ],
+      },
+    ],
+  },
+];
+
+const inlineTests = (elementSymbol, elementTag, inlineSymbol, inlineTag) => [
+  {
+    t: `Element ${elementTag} with inline ${inlineTag} content`,
+    i: [
+      `${elementSymbol}Hello ${inlineSymbol}World${inlineSymbol}`,
+      ` ${elementSymbol} Hello ${inlineSymbol} World ${inlineSymbol} `,
+    ],
+    o: [
+      {
+        category: "element",
+        type: elementTag,
         value: [
           { category: "terminal", type: "string", value: "Hello" },
           {
             category: "inline",
-            type: "strong",
+            type: inlineTag,
             value: [{ category: "terminal", type: "string", value: "World" }],
           },
         ],
@@ -71,6 +93,46 @@ const tests = [
     ],
   },
 ];
+
+const getInlineTests = (elementSymbol, elementTag) => {
+  let tests = [];
+
+  inlines.forEach(([symbol, tag]) => {
+    tests.push(...inlineTests(elementSymbol, elementTag, symbol, tag));
+  });
+
+  return tests;
+};
+
+const getElementTests = () => {
+  let tests = [];
+
+  elements.forEach(([symbol, tag]) => {
+    tests.push(...elementTests(symbol, tag));
+    tests.push(...getInlineTests(symbol, tag));
+  });
+
+  return tests;
+};
+
+const getEmptyTests = () => [
+  {
+    t: "Empty line",
+    i: ["", " "],
+    o: [{ category: "terminal", type: "empty", value: null }],
+  },
+];
+
+const getTests = () => {
+  let tests = [];
+
+  tests.push(...getEmptyTests());
+  tests.push(...getElementTests());
+
+  return tests;
+};
+
+const tests = getTests();
 
 tests.forEach(({ t: label, i: inputs, o: output }) => {
   inputs.forEach((input) => {
