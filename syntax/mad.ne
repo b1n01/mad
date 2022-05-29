@@ -63,7 +63,7 @@ const lexer = moo.states({
 	},
 	"comp-content": {
 	  CB: {match: /}/, pop: 1}, // Go back to element
-	  AT: {match: /@/, push: 'comp'}, // Go to attribute state
+	  //AT: {match: /@/, push: 'comp'}, // Go to attribute state
 		
 	  // A single whitespace (space, tab or line-break)
 	  _: { match: /\s/, lineBreaks: true },
@@ -168,7 +168,7 @@ comp -> "@" %wrd %_:*                                 {% ([,w])        => fmtCom
 args -> arg (%_:* "," (%_:* args):?):?                {% ([arg, args]) => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
 	   
 arg -> %wrd %_:* ":" %_:* (str | num)                 {% ([w,,,,a])    => fmtArgument("string", w.value, a[0])     %}
-     | %wrd %_:* ":" %_:* comp                        {% ([w,,,,c])    => fmtArgument("comp",   w.value,  c)       %}
+     #| %wrd %_:* ":" %_:* comp                        {% ([w,,,,c])    => fmtArgument("comp",   w.value,  c)       %}
 
 #########
 # Utility
