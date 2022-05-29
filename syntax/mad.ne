@@ -4,6 +4,7 @@
 // - handle comments
 // - components inside components are not working!!!
 // - argument of type string have quotes inside the value field? Should we remove them?
+// - Component cannot star on a line with spacing before he t@
 
 const moo = require("moo");
 const lexer = moo.states({
@@ -133,7 +134,7 @@ nostrike -> (string | strong | italic | code)          %e:* nostrike:? {% ([s,,t
 nocode   -> (string | strong | italic | strike)        %e:* nocode:?   {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
 
 # Any chars in a single line except "**", "~~", "__" and "``"
-string -> %string {% ([s]) => fmtTerminal("string", s.value.trim('')) %}
+string -> %string {% ([s]) => fmtTerminal("string", s.value.trim()) %}
 
 # Any number of space on same line
 e -> %e:* {% () => fmtTerminal("empty", null) %} 
@@ -174,5 +175,6 @@ arg -> %wrd %_:* ":" %_:* (str | num)                 {% ([w,,,,a])    => fmtArg
 # Utility
 #########
 
-str -> %str  {% ([n]) => n.value %}
+# Remove first and last quotes
+str -> %str  {% ([n]) => n.value.substring(1, n.value.length - 1) %}
 num -> %num  {% ([n]) => n.value %}

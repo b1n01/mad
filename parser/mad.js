@@ -8,7 +8,7 @@ function id(x) { return x[0]; }
 // - handle comments
 // - components inside components are not working!!!
 // - argument of type string have quotes inside the value field? Should we remove them?
-
+// - Component cannot star on a line with spacing before he t@
 
 const moo = require("moo");
 const lexer = moo.states({
@@ -68,7 +68,7 @@ const lexer = moo.states({
 	},
 	"comp-content": {
 	  CB: {match: /}/, pop: 1}, // Go back to element
-	  AT: {match: /@/, push: 'comp'}, // Go to attribute state
+	  //AT: {match: /@/, push: 'comp'}, // Go to attribute state
 		
 	  // A single whitespace (space, tab or line-break)
 	  _: { match: /\s/, lineBreaks: true },
@@ -222,7 +222,7 @@ var grammar = {
     {"name": "nocode$ebnf$2", "symbols": ["nocode"], "postprocess": id},
     {"name": "nocode$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "nocode", "symbols": ["nocode$subexpression$1", "nocode$ebnf$1", "nocode$ebnf$2"], "postprocess": ([s,,t]) => ({value: [s[0], ...t?.value || []]})},
-    {"name": "string", "symbols": [(lexer.has("string") ? {type: "string"} : string)], "postprocess": ([s]) => fmtTerminal("string", s.value.trim(''))},
+    {"name": "string", "symbols": [(lexer.has("string") ? {type: "string"} : string)], "postprocess": ([s]) => fmtTerminal("string", s.value.trim())},
     {"name": "e$ebnf$1", "symbols": []},
     {"name": "e$ebnf$1", "symbols": ["e$ebnf$1", (lexer.has("e") ? {type: "e"} : e)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "e", "symbols": ["e$ebnf$1"], "postprocess": () => fmtTerminal("empty", null)},
@@ -299,12 +299,7 @@ var grammar = {
     {"name": "arg$subexpression$1", "symbols": ["str"]},
     {"name": "arg$subexpression$1", "symbols": ["num"]},
     {"name": "arg", "symbols": [(lexer.has("wrd") ? {type: "wrd"} : wrd), "arg$ebnf$1", {"literal":":"}, "arg$ebnf$2", "arg$subexpression$1"], "postprocess": ([w,,,,a])    => fmtArgument("string", w.value, a[0])},
-    {"name": "arg$ebnf$3", "symbols": []},
-    {"name": "arg$ebnf$3", "symbols": ["arg$ebnf$3", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "arg$ebnf$4", "symbols": []},
-    {"name": "arg$ebnf$4", "symbols": ["arg$ebnf$4", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "arg", "symbols": [(lexer.has("wrd") ? {type: "wrd"} : wrd), "arg$ebnf$3", {"literal":":"}, "arg$ebnf$4", "comp"], "postprocess": ([w,,,,c])    => fmtArgument("comp",   w.value,  c)},
-    {"name": "str", "symbols": [(lexer.has("str") ? {type: "str"} : str)], "postprocess": ([n]) => n.value},
+    {"name": "str", "symbols": [(lexer.has("str") ? {type: "str"} : str)], "postprocess": ([n]) => n.value.substring(1, n.value.length - 1)},
     {"name": "num", "symbols": [(lexer.has("num") ? {type: "num"} : num)], "postprocess": ([n]) => n.value}
 ]
   , ParserStart: "mad"
