@@ -3,7 +3,7 @@
 Coming soon...
 
 # AST
-The Mad abstract syntax tree is composed by six possible nodes: [element](#element), [terminal](#terminal), [inline](#inline), [attrubite](#attrubite), [component](#component), [argument](#argument).
+The Mad abstract syntax tree is composed by six possible nodes: [element](#element), [terminal](#terminal), [inline](#inline), [attribute](#attribute), [component](#component), [argument](#argument).
 
 <a name="element"></a>
 ```
