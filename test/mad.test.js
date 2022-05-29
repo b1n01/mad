@@ -55,7 +55,10 @@ const elementTests = (symbol, tag) => [
   },
   {
     t: `Element ${tag} with attributes`,
-    i: [`${symbol}Hello{a b=1 .c #d }`, ` ${symbol} Hello { a b=1 .c #d } `],
+    i: [
+      `${symbol}Hello{a b=1 .c #d e='e' f="f" g=.1}`,
+      ` ${symbol} Hello { a b = 1 .c #d e = 'e' f = "f" g = .1 } `,
+    ],
     o: [
       {
         category: "element",
@@ -71,6 +74,9 @@ const elementTests = (symbol, tag) => [
             value: "c",
           },
           { category: "attribute", type: "id", name: null, value: "d" },
+          { category: "attribute", type: "named", name: "e", value: "e" },
+          { category: "attribute", type: "named", name: "f", value: "f" },
+          { category: "attribute", type: "named", name: "g", value: ".1" },
         ],
       },
     ],
