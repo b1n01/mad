@@ -43,41 +43,41 @@ const lexer = moo.states({
 		symbols: ["{", "}", ".", "#", "="],
 	},
 	comp: {
-	  NL: {match: /[\n\r]/, lineBreaks: true, pop: 1}, // New line
-	  OB: {match: /{/, push: 'comp-content'}, // Go to comp-content state
+	  	NL: {match: /[\n\r]/, lineBreaks: true, pop: 1}, // New line
+	  	OB: {match: /{/, push: 'comp-content'}, // Go to comp-content state
 
-	  // Match any spaces and a @	
-	  AT: {match: /^[^\S\r\n]*@/},
+		// Match any spaces and a @	
+		AT: {match: /^[^\S\r\n]*@/},
 
-	  // A single whitespace (space, tab or line-break)
-	  _: { match: /\s/, lineBreaks: true },
+		// A single whitespace (space, tab or line-break)
+		_: { match: /\s/, lineBreaks: true },
 
-	  // A single word containing alphanumeric characters and "-" but starts with a char
-	  wrd: /[a-z]+[\w-]*/,
+		// A single word containing alphanumeric characters and "-" but starts with a char
+		wrd: /[a-z]+[\w-]*/,
 
-	  // Symbols
-	  symbols: ["{"],
+		// Symbols
+		symbols: ["{"],
 	},
 	"comp-content": {
-	  CB: {match: /}/, pop: 1}, // Go back to element
-		
-	  // A single whitespace (space, tab or line-break)
-	  _: { match: /\s/, lineBreaks: true },
+		CB: {match: /}/, pop: 1}, // Go back to element
+			
+		// A single whitespace (space, tab or line-break)
+		_: { match: /\s/, lineBreaks: true },
 
-	  // Signed float or integer
-	  num: /[+-]?(?:\d*\.)?\d+/,
+		// Signed float or integer
+		num: /[+-]?(?:\d*\.)?\d+/,
 
-	  // A single word containing alphanumeric characters and "-" but starts with a char
-	  wrd: /[a-z]+[\w-]*/,
+		// A single word containing alphanumeric characters and "-" but starts with a char
+		wrd: /[a-z]+[\w-]*/,
 
-	  // Single and double quoted string that allows escaped quotes
-	  str: [
-		{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
-		{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
-	  ],
+		// Single and double quoted string that allows escaped quotes
+		str: [
+			{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
+			{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
+		],
 
-	  // Symbols
-	  symbols: ["{", "}", ",", ":", "@"],
+		// Symbols
+		symbols: ["{", "}", ",", ":", "@"],
 	},
 });
 
