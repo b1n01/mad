@@ -3,19 +3,12 @@
 (function () {
 function id(x) { return x[0]; }
 
-// TODO 
-// - "string" cannot contain "/{" or "\@"
-// - handle comments
-// - components inside components are not working!!!
-// - argument of type string have quotes inside the value field? Should we remove them?
-// - Component cannot star on a line with spacing before he t@
-
 const moo = require("moo");
 const lexer = moo.states({
   	// Elements lexer
 	elem: {
 		OB: {match: /{/, push: 'attr'}, // Go to attribute state
-		AT: {match: /@/, push: 'comp'}, // Go to attribute state
+		AT: {match: /^[^\S\r\n]*@/, push: 'comp'}, // Go to attribute state
 		h6: /^[^\S\r\n]*#{6}/,
 		h5: /^[^\S\r\n]*#{5}/,
 		h4: /^[^\S\r\n]*#{4}/,
@@ -57,6 +50,9 @@ const lexer = moo.states({
 	  NL: {match: /[\n\r]/, lineBreaks: true, pop: 1}, // New line
 	  OB: {match: /{/, push: 'comp-content'}, // Go to comp-content state
 
+	  // Match any spaces and a @	
+	  AT: {match: /^[^\S\r\n]*@/},
+
 	  // A single whitespace (space, tab or line-break)
 	  _: { match: /\s/, lineBreaks: true },
 
@@ -64,11 +60,10 @@ const lexer = moo.states({
 	  wrd: /[a-z]+[\w-]*/,
 
 	  // Symbols
-	  symbols: ["{", "@"],
+	  symbols: ["{"],
 	},
 	"comp-content": {
 	  CB: {match: /}/, pop: 1}, // Go back to element
-	  //AT: {match: /@/, push: 'comp'}, // Go to attribute state
 		
 	  // A single whitespace (space, tab or line-break)
 	  _: { match: /\s/, lineBreaks: true },
@@ -89,7 +84,6 @@ const lexer = moo.states({
 	  symbols: ["{", "}", ",", ":", "@"],
 	},
 });
-
 
 const fmtElement   = (type, value, attrs) => ({category: "element",   type,       value, attrs})
 const fmtTerminal  = (type, value)        => ({category: "terminal",  type,       value       })
@@ -113,7 +107,7 @@ var grammar = {
     {"name": "elem$subexpression$1", "symbols": ["h5"]},
     {"name": "elem$subexpression$1", "symbols": ["h6"]},
     {"name": "elem$subexpression$1", "symbols": ["p"]},
-    {"name": "elem$subexpression$1", "symbols": ["blockquote"]},
+    {"name": "elem$subexpression$1", "symbols": ["quote"]},
     {"name": "elem$subexpression$1", "symbols": ["pre"]},
     {"name": "elem$ebnf$1$subexpression$1$ebnf$1", "symbols": []},
     {"name": "elem$ebnf$1$subexpression$1$ebnf$1", "symbols": ["elem$ebnf$1$subexpression$1$ebnf$1", (lexer.has("e") ? {type: "e"} : e)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
@@ -151,11 +145,11 @@ var grammar = {
     {"name": "h6$ebnf$2", "symbols": ["text"], "postprocess": id},
     {"name": "h6$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "h6", "symbols": [(lexer.has("h6") ? {type: "h6"} : h6), "h6$ebnf$1", "h6$ebnf$2"], "postprocess": ([,,t]) => ({type: "h6",    value: t?.value || []})},
-    {"name": "blockquote$ebnf$1", "symbols": []},
-    {"name": "blockquote$ebnf$1", "symbols": ["blockquote$ebnf$1", (lexer.has("e") ? {type: "e"} : e)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "blockquote$ebnf$2", "symbols": ["text"], "postprocess": id},
-    {"name": "blockquote$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "blockquote", "symbols": [(lexer.has("GT") ? {type: "GT"} : GT), "blockquote$ebnf$1", "blockquote$ebnf$2"], "postprocess": ([,,t]) => ({type: "quote", value: t?.value || []})},
+    {"name": "quote$ebnf$1", "symbols": []},
+    {"name": "quote$ebnf$1", "symbols": ["quote$ebnf$1", (lexer.has("e") ? {type: "e"} : e)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "quote$ebnf$2", "symbols": ["text"], "postprocess": id},
+    {"name": "quote$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "quote", "symbols": [(lexer.has("GT") ? {type: "GT"} : GT), "quote$ebnf$1", "quote$ebnf$2"], "postprocess": ([,,t]) => ({type: "quote", value: t?.value || []})},
     {"name": "pre$ebnf$1", "symbols": []},
     {"name": "pre$ebnf$1", "symbols": ["pre$ebnf$1", (lexer.has("e") ? {type: "e"} : e)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "pre$ebnf$2", "symbols": ["text"], "postprocess": id},
@@ -268,7 +262,7 @@ var grammar = {
     {"name": "id", "symbols": [{"literal":"#"}, (lexer.has("wrd") ? {type: "wrd"} : wrd)], "postprocess": ([,d])           => fmtAttribute("id",    null,    d.value)},
     {"name": "comp$ebnf$1", "symbols": []},
     {"name": "comp$ebnf$1", "symbols": ["comp$ebnf$1", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "comp", "symbols": [{"literal":"@"}, (lexer.has("wrd") ? {type: "wrd"} : wrd), "comp$ebnf$1"], "postprocess": ([,w])        => fmtComponent(w.value, [])},
+    {"name": "comp", "symbols": [(lexer.has("AT") ? {type: "AT"} : AT), (lexer.has("wrd") ? {type: "wrd"} : wrd), "comp$ebnf$1"], "postprocess": ([,w])        => fmtComponent(w.value, [])},
     {"name": "comp$ebnf$2", "symbols": []},
     {"name": "comp$ebnf$2", "symbols": ["comp$ebnf$2", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "comp$ebnf$3", "symbols": []},
@@ -280,7 +274,7 @@ var grammar = {
     {"name": "comp$ebnf$4", "symbols": [], "postprocess": function(d) {return null;}},
     {"name": "comp$ebnf$5", "symbols": []},
     {"name": "comp$ebnf$5", "symbols": ["comp$ebnf$5", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "comp", "symbols": [{"literal":"@"}, (lexer.has("wrd") ? {type: "wrd"} : wrd), "comp$ebnf$2", {"literal":"{"}, "comp$ebnf$3", "comp$ebnf$4", {"literal":"}"}, "comp$ebnf$5"], "postprocess": ([,w,,,,as])  => fmtComponent(w.value, as?.[0] || [])},
+    {"name": "comp", "symbols": [(lexer.has("AT") ? {type: "AT"} : AT), (lexer.has("wrd") ? {type: "wrd"} : wrd), "comp$ebnf$2", {"literal":"{"}, "comp$ebnf$3", "comp$ebnf$4", {"literal":"}"}, "comp$ebnf$5"], "postprocess": ([,w,,,,as])  => fmtComponent(w.value, as?.[0] || [])},
     {"name": "args$ebnf$1$subexpression$1$ebnf$1", "symbols": []},
     {"name": "args$ebnf$1$subexpression$1$ebnf$1", "symbols": ["args$ebnf$1$subexpression$1$ebnf$1", (lexer.has("_") ? {type: "_"} : _)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "args$ebnf$1$subexpression$1$ebnf$2$subexpression$1$ebnf$1", "symbols": []},

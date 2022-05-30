@@ -132,7 +132,7 @@ const getElementTests = () => {
 const getComponentTests = () => [
   {
     t: "Empty component",
-    i: ["@comp", "@comp "], // TODO add a space before the @
+    i: ["@comp", " @comp "],
     o: [
       {
         category: "component",
@@ -145,7 +145,7 @@ const getComponentTests = () => [
     t: "Component",
     i: [
       `@comp{arg:'val',arg2:"val",arg3:3,arg4:.4}`,
-      `@comp { arg : 'val' , arg2 : "val" , arg3 : 3 , arg4 : .4 } `, // TODO add a space before the @
+      ` @comp { arg : 'val' , arg2 : "val" , arg3 : 3 , arg4 : .4 } `,
     ],
     o: [
       {
