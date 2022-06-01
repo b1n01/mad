@@ -19,7 +19,9 @@ const lexer = moo.states({
 		code: "``",
 		NL: {match: /[\n\r]/, lineBreaks: true}, // New line
 		e: /[^\S\r\n]/,
-		string: /(?:(?!__|\*\*|~~|``|{|@)[^\n\r])+/, // todo scaped braces "\{|" and "\@" should be allowed
+		// Mayh characters in a single line except for inline delimiters *`~{_ and and line-breack
+		// that can be in the string escaped by a backslash \
+		string: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|[^{\*`_~\n\r])+/
 	},
 	attr: {
 		CB: {match: /}/, pop: 1}, // Go back to element
