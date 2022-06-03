@@ -1,10 +1,47 @@
 @{%
+// @see https://github.com/no-context/moo
 const moo = require("moo");
+
+// Math a single non line-breaking whitespace
+const nonBreakingSpace = { match: /[^\S\r\n]/ };
+
+// Match a single whitespace (space, tab or line-break)
+const space = { match: /\s/, lineBreaks: true };
+
+// Match a single new line character
+const newLine = { match: /[\n\r]/, lineBreaks: true };
+
+// Match a number, optionally with a decimal point and sign
+const number = { match: /[+-]?(?:\d*\.)?\d+/ };
+
+// A single word containing alphanumeric characters and hypen,
+// but starts with an alphabetical character
+const word = { match: /[a-z]+[\w-]*/ };
+
+// Match any characters in a single line except for *`~{_ and line-breaks
+// They can be in the string escaped by a backslash \
+const string = { match: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|[^{\*`_~\n\r])+/ };
+
+// Match a single or double quoted string that allows escaped quotes with
+// backspaces \
+const quotedString = [
+	{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
+	{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
+];
+
+// Match a single {
+const openBrace = { match: /{/ };
+
+// Match a single }
+const closeBrace = { match: /}/ };
+
+// Match any number of spces followeb by a @	
+const at = { match: /^[^\S\r\n]*@/ };
+
 const lexer = moo.states({
-  	// Elements lexer
-	elem: {
-		OB: {match: /{/, push: 'attr'}, // Go to attribute state
-		AT: {match: /^[^\S\r\n]*@/, push: 'comp'}, // Go to attribute state
+	element: {
+		openBrace: { ...openBrace, push: 'attribute' },
+		at: { ...at, push: 'component' }, 
 		h6: /^[^\S\r\n]*#{6}/,
 		h5: /^[^\S\r\n]*#{5}/,
 		h4: /^[^\S\r\n]*#{4}/,
@@ -17,69 +54,32 @@ const lexer = moo.states({
 		italic: "__",
 		strike: "~~",
 		code: "``",
-		NL: {match: /[\n\r]/, lineBreaks: true}, // New line
-		e: /[^\S\r\n]/,
-		// Mayh characters in a single line except for inline delimiters *`~{_ and and line-breack
-		// that can be in the string escaped by a backslash \
-		string: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|[^{\*`_~\n\r])+/
+		newLine,
+		nonBreakingSpace,
+		string
 	},
-	attr: {
-		CB: {match: /}/, pop: 1}, // Go back to element
-		
-		// A single whitespace (space, tab or line-break)
-		_: { match: /\s/, lineBreaks: true },
-
-		// Signed float or integer
-		num: /[+-]?(?:\d*\.)?\d+/,
-
-		// A single word containing alphanumeric characters and "-" but starts with a char
-		wrd: /[a-z]+[\w-]*/,
-
-		// Single and double quoted string that allows escaped quotes
-		str: [
-			{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
-			{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
-		],
-
-		// Symbols
-		symbols: ["{", "}", ".", "#", "="],
+	attribute: {
+		closeBrace: { ...closeBrace, pop: 1 },
+		space,
+		number,
+		word,
+		quotedString,
+		symbols: [".", "#", "="],
 	},
-	comp: {
-	  	NL: {match: /[\n\r]/, lineBreaks: true, pop: 1}, // New line
-	  	OB: {match: /{/, push: 'comp-content'}, // Go to comp-content state
-
-		// Match any spaces and a @	
-		AT: {match: /^[^\S\r\n]*@/},
-
-		// A single whitespace (space, tab or line-break)
-		_: { match: /\s/, lineBreaks: true },
-
-		// A single word containing alphanumeric characters and "-" but starts with a char
-		wrd: /[a-z]+[\w-]*/,
-
-		// Symbols
-		symbols: ["{"],
+	component: {
+	  	newLine: { ...newLine, pop: 1},
+	  	openBrace: { ...openBrace, push: 'componentContent' },
+		at,
+		space,
+		word,
 	},
-	"comp-content": {
-		CB: {match: /}/, pop: 1}, // Go back to element
-			
-		// A single whitespace (space, tab or line-break)
-		_: { match: /\s/, lineBreaks: true },
-
-		// Signed float or integer
-		num: /[+-]?(?:\d*\.)?\d+/,
-
-		// A single word containing alphanumeric characters and "-" but starts with a char
-		wrd: /[a-z]+[\w-]*/,
-
-		// Single and double quoted string that allows escaped quotes
-		str: [
-			{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
-			{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
-		],
-
-		// Symbols
-		symbols: ["{", "}", ",", ":", "@"],
+	componentContent: {
+		closeBrace: { ...closeBrace, pop: 1 },
+		space,
+		number,
+		word,
+		quotedString,
+		symbols: [",", ":"],
 	},
 });
 
@@ -94,83 +94,103 @@ const fmtArgument  = (type, name, value)  => ({category: "argument",  type, name
 
 @lexer lexer
 
-mad -> exp {% id %} | exp %NL mad {% ([e,,m]) => [e[0], ...m] %}
+mad -> exp {% id %} | exp %newLine mad {% ([e,,m]) => [e[0], ...m] %}
 
-exp -> elem | comp | e
+exp -> elem | comp | empty
 
 ##########
 # Elements
 ##########
 
-elem -> (h1 | h2 | h3 | h4 | h5 | h6 | p | quote | pre) (attr %e:*):? {% ([b,a]) => fmtElement(b[0].type, b[0].value, a?.[0] || []) %}
+elem -> (h1 | h2 | h3 | h4 | h5 | h6 | p | quote | pre) (attr _n):? {% ([b,a]) => fmtElement(b[0].type, b[0].value, a?.[0] || []) %}
 
 # Blocks elements
-h1    -> %h1   %e:* text:? {% ([,,t]) => ({type: "h1",    value: t?.value || []}) %}
-h2    -> %h2   %e:* text:? {% ([,,t]) => ({type: "h2",    value: t?.value || []}) %}
-h3    -> %h3   %e:* text:? {% ([,,t]) => ({type: "h3",    value: t?.value || []}) %}
-h4    -> %h4   %e:* text:? {% ([,,t]) => ({type: "h4",    value: t?.value || []}) %}
-h5    -> %h5   %e:* text:? {% ([,,t]) => ({type: "h5",    value: t?.value || []}) %}
-h6    -> %h6   %e:* text:? {% ([,,t]) => ({type: "h6",    value: t?.value || []}) %}
-quote -> %GT   %e:* text:? {% ([,,t]) => ({type: "quote", value: t?.value || []}) %}
-pre   -> %pipe %e:* text:? {% ([,,t]) => ({type: "pre",   value: t?.value || []}) %}
-p     ->       %e:* text   {% ([,t])  => ({type: "p",     value: t?.value || []}) %}
+h1    -> %h1   _n text:? {% ([,,t]) => ({type: "h1",    value: t?.value || []}) %}
+h2    -> %h2   _n text:? {% ([,,t]) => ({type: "h2",    value: t?.value || []}) %}
+h3    -> %h3   _n text:? {% ([,,t]) => ({type: "h3",    value: t?.value || []}) %}
+h4    -> %h4   _n text:? {% ([,,t]) => ({type: "h4",    value: t?.value || []}) %}
+h5    -> %h5   _n text:? {% ([,,t]) => ({type: "h5",    value: t?.value || []}) %}
+h6    -> %h6   _n text:? {% ([,,t]) => ({type: "h6",    value: t?.value || []}) %}
+quote -> %GT   _n text:? {% ([,,t]) => ({type: "quote", value: t?.value || []}) %}
+pre   -> %pipe _n text:? {% ([,,t]) => ({type: "pre",   value: t?.value || []}) %}
+p     ->       _n text   {% ([,t])  => ({type: "p",     value: t?.value || []}) %}
 
 # Inline elements
-strong -> %strong %e:* nostrong %strong {% ([,,s]) => fmtInline("strong", s.value) %}
-italic -> %italic %e:* noitalic %italic {% ([,,s]) => fmtInline("italic", s.value) %}
-strike -> %strike %e:* nostrike %strike {% ([,,s]) => fmtInline("strike", s.value) %}
-code   -> %code   %e:* nocode   %code   {% ([,,s]) => fmtInline("code",   s.value) %}
+strong -> %strong _n nostrong %strong {% ([,,s]) => fmtInline("strong", s.value) %}
+italic -> %italic _n noitalic %italic {% ([,,s]) => fmtInline("italic", s.value) %}
+strike -> %strike _n nostrike %strike {% ([,,s]) => fmtInline("strike", s.value) %}
+code   -> %code   _n nocode   %code   {% ([,,s]) => fmtInline("code",   s.value) %}
 
 # "text" is a single line of text containing all inline blocks. The others are 
 # line of texts containing all inline blocks except for themself
-text     -> (string | strong | italic | strike | code) %e:* text:?     {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
-nostrong -> (string | italic | strike | code)          %e:* nostrong:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
-noitalic -> (string | strong | strike | code)          %e:* noitalic:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
-nostrike -> (string | strong | italic | code)          %e:* nostrike:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
-nocode   -> (string | strong | italic | strike)        %e:* nocode:?   {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
-
-# Any chars in a single line except "**", "~~", "__" and "``" and others
-string -> %string {% ([s]) => fmtTerminal("string", s.value.trim()) %}
-
-# Any number of space on same line
-e -> %e:* {% () => fmtTerminal("empty", null) %} 
+text     -> (string | strong | italic | strike | code) _n text:?     {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+nostrong -> (string | italic | strike | code)          _n nostrong:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+noitalic -> (string | strong | strike | code)          _n noitalic:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+nostrike -> (string | strong | italic | code)          _n nostrike:? {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
+nocode   -> (string | strong | italic | strike)        _n nocode:?   {% ([s,,t]) => ({value: [s[0], ...t?.value || []]})  %} 
 
 ############
 # Attributes
 ############
 
-attr -> "{" %_:* (attrs %_:*):? "}"                   {% ([,,attrs])      => attrs?.[0] || [] %} 
+attr -> "{" _ (attrs _):? "}"                       {% ([,,attrs])      => attrs?.[0] || []                  %} 
 
-attrs -> props                                        {% ([ps])           => [...ps]              %}    
-	   | id                                           {% ([id])           => [id]                 %}  
-	   | props %_:+ id                                {% ([ps,,id])       => [...ps, id]          %}           
-	   | id %_:+ props                                {% ([id,,ps])       => [id, ...ps]          %}
-	   | props %_:+ id %_:+ props                     {% ([ps1,,id,,ps2]) => [...ps1, id, ...ps2] %}
+attrs -> props                                      {% ([ps])           => [...ps]                           %}    
+	   | id                                         {% ([id])           => [id]                              %}  
+	   | props __ id                                {% ([ps,,id])       => [...ps, id]                       %}           
+	   | id __ props                                {% ([id,,ps])       => [id, ...ps]                       %}
+	   | props __ id __ props                       {% ([ps1,,id,,ps2]) => [...ps1, id, ...ps2]              %}
 
-props -> (boolAtt | namedAttr | class) (%_:+ props):? {% ([d, ps])        => ps ? [d[0], ...ps[1]] : [d[0]] %}
+props -> (boolAtt | namedAttr | class) (__ props):? {% ([d, ps])        => ps ? [d[0], ...ps[1]] : [d[0]]    %}
 
-boolAtt   ->     %wrd                                 {% ([d])            => fmtAttribute("bool",  null,    d.value) %}
-namedAttr ->     %wrd %_:* "=" %_:* (str | num)       {% ([n,,,,d])       => fmtAttribute("named", n.value, d[0])    %}
-class     -> "." %wrd                                 {% ([,d])           => fmtAttribute("class", null,    d.value) %}
-id        -> "#" %wrd                                 {% ([,d])           => fmtAttribute("id",    null,    d.value) %}
+boolAtt   ->     word                               {% ([w])            => fmtAttribute("bool",  null,    w) %}
+namedAttr ->     word _ "=" _ aplhanum              {% ([w,,,,a])       => fmtAttribute("named", w,       a) %}
+class     -> "." word                               {% ([,w])           => fmtAttribute("class", null,    w) %}
+id        -> "#" word                               {% ([,w])           => fmtAttribute("id",    null,    w) %}
 
 
 ############
 # Components
 ############
 
-comp -> %AT %wrd %_:*                                 {% ([,w])        => fmtComponent(w.value, [])                %}
-	  | %AT %wrd %_:* "{" %_:* (args %_:*):? "}" %_:* {% ([,w,,,,as])  => fmtComponent(w.value, as?.[0] || [])     %}
+comp -> %at word _                        {% ([,w])         => fmtComponent(w, [])                      %}
+	  | %at word _ "{" _ (args _):? "}" _ {% ([,w,,,,args]) => fmtComponent(w, args?.[0] || [])         %}
 	   
-args -> arg (%_:* "," (%_:* args):?):?                {% ([arg, args]) => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
+args -> arg (_ "," (_ args):?):?          {% ([arg, args])  => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
 	   
-arg -> %wrd %_:* ":" %_:* (str | num)                 {% ([w,,,,a])    => fmtArgument("string", w.value, a[0])     %}
-	 #| %wrd %_:* ":" %_:* comp                        {% ([w,,,,c])    => fmtArgument("comp",   w.value,  c)       %}
+arg -> word _ ":" _ aplhanum              {% ([w,,,,a])     => fmtArgument("string", w, a)              %}
+	 #| word _ ":" _ comp                 {% ([w,,,,c])     => fmtArgument("comp",   w, c)              %}
 
 #########
 # Utility
 #########
 
-# Remove first and last quotes
-str -> %str  {% ([n]) => n.value.substring(1, n.value.length - 1) %}
-num -> %num  {% ([n]) => n.value %}
+# Any number of whitespace
+_ -> %space:*
+
+# At least one whitespace
+__ -> %space:+
+
+# Any number of non line-breaking whitespaces
+_n -> %nonBreakingSpace:*
+
+# At least one line-breaking whitespaces
+__n -> %nonBreakingSpace:+
+
+# Empty line
+empty -> %nonBreakingSpace:* {% () => fmtTerminal("empty", null) %} 
+
+# Any chars in a single line except "**", "~~", "__" and "``" and others
+string -> %string {% ([s]) => fmtTerminal("string", s.value.trim()) %}
+
+# Match alphanumeric
+aplhanum -> quoted {% id %} | number {% id %}
+
+# Quoted string, remove first and last quotes
+quoted -> %quotedString  {% ([n]) => n.value.substring(1, n.value.length - 1) %}
+
+# Match a word
+word -> %word {% ([n]) => n.value %}
+
+# Number
+number -> %number {% ([n]) => n.value %}
