@@ -33,18 +33,12 @@ const quotedString = [
 	{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
 ];
 
-// Match a single {
-const openBrace = { match: /{/ };
-
-// Match a single }
-const closeBrace = { match: /}/ };
-
 // Match any number of spces followeb by a @	
 const at = { match: /^[^\S\r\n]*@/ };
 
 const lexer = moo.states({
 	element: {
-		openBrace: { ...openBrace, push: 'attribute' },
+		openBrace: { match: "{", push: 'attribute' },
 		at: { ...at, push: 'component' }, 
 		h6: /^[^\S\r\n]*#{6}/,
 		h5: /^[^\S\r\n]*#{5}/,
@@ -63,7 +57,7 @@ const lexer = moo.states({
 		string
 	},
 	attribute: {
-		closeBrace: { ...closeBrace, pop: 1 },
+		closeBrace: { match: /}/, pop: 1 },
 		space,
 		number,
 		word,
@@ -72,13 +66,13 @@ const lexer = moo.states({
 	},
 	component: {
 	  	newLine: { ...newLine, pop: 1},
-	  	openBrace: { ...openBrace, push: 'componentContent' },
+	  	openBrace: { match: "{", push: 'componentContent' },
 		at,
 		space,
 		word,
 	},
 	componentContent: {
-		closeBrace: { ...closeBrace, pop: 1 },
+		closeBrace: {  match: /}/, pop: 1 },
 		space,
 		number,
 		word,
@@ -222,9 +216,6 @@ var grammar = {
     {"name": "_n$ebnf$1", "symbols": []},
     {"name": "_n$ebnf$1", "symbols": ["_n$ebnf$1", (lexer.has("nonBreakingSpace") ? {type: "nonBreakingSpace"} : nonBreakingSpace)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "_n", "symbols": ["_n$ebnf$1"]},
-    {"name": "__n$ebnf$1", "symbols": [(lexer.has("nonBreakingSpace") ? {type: "nonBreakingSpace"} : nonBreakingSpace)]},
-    {"name": "__n$ebnf$1", "symbols": ["__n$ebnf$1", (lexer.has("nonBreakingSpace") ? {type: "nonBreakingSpace"} : nonBreakingSpace)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "__n", "symbols": ["__n$ebnf$1"]},
     {"name": "empty$ebnf$1", "symbols": []},
     {"name": "empty$ebnf$1", "symbols": ["empty$ebnf$1", (lexer.has("nonBreakingSpace") ? {type: "nonBreakingSpace"} : nonBreakingSpace)], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "empty", "symbols": ["empty$ebnf$1"], "postprocess": () => fmtTerminal("empty", null)},

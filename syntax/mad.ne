@@ -29,18 +29,12 @@ const quotedString = [
 	{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
 ];
 
-// Match a single {
-const openBrace = { match: /{/ };
-
-// Match a single }
-const closeBrace = { match: /}/ };
-
 // Match any number of spces followeb by a @	
 const at = { match: /^[^\S\r\n]*@/ };
 
 const lexer = moo.states({
 	element: {
-		openBrace: { ...openBrace, push: 'attribute' },
+		openBrace: { match: "{", push: 'attribute' },
 		at: { ...at, push: 'component' }, 
 		h6: /^[^\S\r\n]*#{6}/,
 		h5: /^[^\S\r\n]*#{5}/,
@@ -59,7 +53,7 @@ const lexer = moo.states({
 		string
 	},
 	attribute: {
-		closeBrace: { ...closeBrace, pop: 1 },
+		closeBrace: { match: /}/, pop: 1 },
 		space,
 		number,
 		word,
@@ -68,13 +62,13 @@ const lexer = moo.states({
 	},
 	component: {
 	  	newLine: { ...newLine, pop: 1},
-	  	openBrace: { ...openBrace, push: 'componentContent' },
+	  	openBrace: { match: "{", push: 'componentContent' },
 		at,
 		space,
 		word,
 	},
 	componentContent: {
-		closeBrace: { ...closeBrace, pop: 1 },
+		closeBrace: {  match: /}/, pop: 1 },
 		space,
 		number,
 		word,
@@ -174,9 +168,6 @@ __ -> %space:+
 # Any number of non line-breaking whitespaces
 _n -> %nonBreakingSpace:*
 
-# At least one line-breaking whitespaces
-__n -> %nonBreakingSpace:+
-
 # Empty line
 empty -> %nonBreakingSpace:* {% () => fmtTerminal("empty", null) %} 
 
@@ -192,5 +183,5 @@ quoted -> %quotedString  {% ([n]) => n.value.substring(1, n.value.length - 1) %}
 # Match a word
 word -> %word {% ([n]) => n.value %}
 
-# Number
+# Match a number
 number -> %number {% ([n]) => n.value %}
