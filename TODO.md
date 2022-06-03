@@ -2,7 +2,9 @@
  
 - [x] Component cannot star on a line with spacing before the @
 - [x] "string" cannot contain "{" or "@"
-- [x] Argument of type string have quotes inside the value field? Should we remove them?
-- [ ] Components inside components are not working!!!
-- [ ] Can we handle regular html in the syntax?
+- [x] Remove string quotes from the value field
 - [ ] Handle comments
+- [ ] Handle markdown link
+- [ ] Hanlde markdown pic
+- [ ] Handle components inside components
+- [ ] Handle regular html

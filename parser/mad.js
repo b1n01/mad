@@ -3,7 +3,6 @@
 (function () {
 function id(x) { return x[0]; }
 
-// @see https://github.com/no-context/moo
 const moo = require("moo");
 
 // Math a single non line-breaking whitespace
