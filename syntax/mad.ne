@@ -24,56 +24,56 @@ const string = { match: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|[^{\*`_~\n\r])+/ };
 // Match a single or double quoted string that allows escaped quotes with
 // backspaces \
 const quotedString = [
-	{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
-	{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
+    { match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
+    { match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
 ];
 
 // Match any number of spces followeb by a @	
 const at = { match: /^[^\S\r\n]*@/ };
 
 const lexer = moo.states({
-	element: {
-		openBrace: { match: "{", push: 'attribute' },
-		at: { ...at, push: 'component' }, 
-		h6: /^[^\S\r\n]*#{6}/,
-		h5: /^[^\S\r\n]*#{5}/,
-		h4: /^[^\S\r\n]*#{4}/,
-		h3: /^[^\S\r\n]*#{3}/,
-		h2: /^[^\S\r\n]*#{2}/,
-		h1: /^[^\S\r\n]*#/,
-		GT: /^[^\S\r\n]*>/,
-		pipe: /^[^\S\r\n]*\|/,
-		strong: "**",
-		italic: "__",
-		strike: "~~",
-		code: "``",
-		newLine,
-		nonBreakingSpace,
-		string
-	},
-	attribute: {
-		closeBrace: { match: /}/, pop: 1 },
-		space,
-		number,
-		word,
-		quotedString,
-		symbols: [".", "#", "="],
-	},
-	component: {
-	  	newLine: { ...newLine, pop: 1},
-	  	openBrace: { match: "{", push: 'componentContent' },
-		at,
-		space,
-		word,
-	},
-	componentContent: {
-		closeBrace: {  match: /}/, pop: 1 },
-		space,
-		number,
-		word,
-		quotedString,
-		symbols: [",", ":"],
-	},
+    element: {
+        openBrace: { match: "{", push: 'attribute' },
+        at: { ...at, push: 'component' }, 
+        h6: /^[^\S\r\n]*#{6}/,
+        h5: /^[^\S\r\n]*#{5}/,
+        h4: /^[^\S\r\n]*#{4}/,
+        h3: /^[^\S\r\n]*#{3}/,
+        h2: /^[^\S\r\n]*#{2}/,
+        h1: /^[^\S\r\n]*#/,
+        GT: /^[^\S\r\n]*>/,
+        pipe: /^[^\S\r\n]*\|/,
+        strong: "**",
+        italic: "__",
+        strike: "~~",
+        code: "``",
+        newLine,
+        nonBreakingSpace,
+        string
+    },
+    attribute: {
+        closeBrace: { match: /}/, pop: 1 },
+        space,
+        number,
+        word,
+        quotedString,
+        symbols: [".", "#", "="],
+    },
+    component: {
+          newLine: { ...newLine, pop: 1},
+          openBrace: { match: "{", push: 'componentContent' },
+        at,
+        space,
+        word,
+    },
+    componentContent: {
+        closeBrace: {  match: /}/, pop: 1 },
+        space,
+        number,
+        word,
+        quotedString,
+        symbols: [",", ":"],
+    },
 });
 
 const fmtElement   = (type, value, attrs) => ({category: "element",   type,       value, attrs})
@@ -129,10 +129,10 @@ nocode   -> (string | strong | italic | strike)        _n nocode:?   {% ([s,,t])
 attr -> "{" _ (attrs _):? "}"                       {% ([,,attrs])      => attrs?.[0] || []                  %} 
 
 attrs -> props                                      {% ([ps])           => [...ps]                           %}    
-	   | id                                         {% ([id])           => [id]                              %}  
-	   | props __ id                                {% ([ps,,id])       => [...ps, id]                       %}           
-	   | id __ props                                {% ([id,,ps])       => [id, ...ps]                       %}
-	   | props __ id __ props                       {% ([ps1,,id,,ps2]) => [...ps1, id, ...ps2]              %}
+       | id                                         {% ([id])           => [id]                              %}  
+       | props __ id                                {% ([ps,,id])       => [...ps, id]                       %}           
+       | id __ props                                {% ([id,,ps])       => [id, ...ps]                       %}
+       | props __ id __ props                       {% ([ps1,,id,,ps2]) => [...ps1, id, ...ps2]              %}
 
 props -> (boolAtt | namedAttr | class) (__ props):? {% ([d, ps])        => ps ? [d[0], ...ps[1]] : [d[0]]    %}
 
@@ -147,12 +147,12 @@ id        -> "#" word                               {% ([,w])           => fmtAt
 ############
 
 comp -> %at word _                        {% ([,w])         => fmtComponent(w, [])                      %}
-	  | %at word _ "{" _ (args _):? "}" _ {% ([,w,,,,args]) => fmtComponent(w, args?.[0] || [])         %}
-	   
+      | %at word _ "{" _ (args _):? "}" _ {% ([,w,,,,args]) => fmtComponent(w, args?.[0] || [])         %}
+       
 args -> arg (_ "," (_ args):?):?          {% ([arg, args])  => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
-	   
+       
 arg -> word _ ":" _ aplhanum              {% ([w,,,,a])     => fmtArgument("string", w, a)              %}
-	 #| word _ ":" _ comp                 {% ([w,,,,c])     => fmtArgument("comp",   w, c)              %}
+     #| word _ ":" _ comp                 {% ([w,,,,c])     => fmtArgument("comp",   w, c)              %}
 
 #########
 # Utility
