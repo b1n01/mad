@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "chokidar 'syntax/*.ne' -c 'npm run compile && npm run test'",
+    "start": "chokidar 'syntax/*.ne' 'test/*.test.js' -c 'npm run compile && npm run test'",
     "compile": "nearleyc syntax/mad.ne -o parser/mad.js",
     "test": "jest"
   },
