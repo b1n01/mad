@@ -73,6 +73,7 @@ const lexer = moo.states({
         word,
     },
     componentContent: {
+        comment,
         closeBrace: {  match: "}", pop: 1 },
         space,
         number,
@@ -95,7 +96,7 @@ const fmtArgument  = (type, name, value)  => ({category: "argument",  type, name
 
 mad -> exp {% id %} | exp %newLine mad {% ([e,,m]) => [e[0], ...m] %}
 
-exp -> (elem | comp | empty) comm {% ([e]) => e %}
+exp -> (elem | comp | empty) comm:? {% ([e]) => e %}
 
 ##########
 # Elements
@@ -132,7 +133,7 @@ nocode   -> (string | strong | italic | strike)        _n nocode:?   {% ([s,,t])
 # Attributes
 ############
 
-attr -> "{" _ (attrs _):? "}"                       {% ([,,attrs])      => attrs?.[0] || []                  %} 
+attr -> "{" (_ comm):* _ (attrs _):? (_ comm):* "}" {% ([,,,attrs])     => attrs?.[0] || []                  %} 
 
 attrs -> props                                      {% ([ps])           => [...ps]                           %}    
        | id                                         {% ([id])           => [id]                              %}  
@@ -142,23 +143,23 @@ attrs -> props                                      {% ([ps])           => [...p
 
 props -> (boolAtt | namedAttr | class) (__ props):? {% ([d, ps])        => ps ? [d[0], ...ps[1]] : [d[0]]    %}
 
-boolAtt   ->     word                               {% ([w])            => fmtAttribute("bool",  null,    w) %}
-namedAttr ->     word _ "=" _ aplhanum              {% ([w,,,,a])       => fmtAttribute("named", w,       a) %}
-class     -> "." word                               {% ([,w])           => fmtAttribute("class", null,    w) %}
-id        -> "#" word                               {% ([,w])           => fmtAttribute("id",    null,    w) %}
+boolAtt   ->     word (_ comm):?                    {% ([w])            => fmtAttribute("bool",  null,    w) %}
+namedAttr ->     word _ "=" _ aplhanum (_ comm):?   {% ([w,,,,a])       => fmtAttribute("named", w,       a) %}
+class     -> "." word (_ comm):?                    {% ([,w])           => fmtAttribute("class", null,    w) %}
+id        -> "#" word (_ comm):?                    {% ([,w])           => fmtAttribute("id",    null,    w) %}
 
 
 ############
 # Components
 ############
 
-comp -> %at word _                        {% ([,w])         => fmtComponent(w, [])                      %}
-      | %at word _ "{" _ (args _):? "}" _ {% ([,w,,,,args]) => fmtComponent(w, args?.[0] || [])         %}
+comp -> %at word _                                     {% ([,w])          => fmtComponent(w, [])                      %}
+      | %at word _ "{" (_ comm):* _ (args _):? "}" _   {% ([,w,,,,,args]) => fmtComponent(w, args?.[0] || [])         %}
        
-args -> arg (_ "," (_ args):?):?          {% ([arg, args])  => args?.[2] ? [arg, ...args[2][1]] : [arg] %}
+args -> arg (_ comm):* (_ "," (_ comm):* (_ args):?):? {% ([arg,,args])   => args?.[3] ? [arg, ...args[3][1]] : [arg] %}
        
-arg -> word _ ":" _ aplhanum              {% ([w,,,,a])     => fmtArgument("string", w, a)              %}
-     #| word _ ":" _ comp                 {% ([w,,,,c])     => fmtArgument("comp",   w, c)              %}
+arg -> word _ ":" _ aplhanum                           {% ([w,,,,a])      => fmtArgument("string", w, a)              %}
+    #| word _ ":" _ comp                               {% ([w,,,,c])      => fmtArgument("comp",   w, c)              %}
 
 #########
 # Utility
@@ -174,7 +175,7 @@ __ -> %space:+
 _n -> %nonBreakingSpace:*
 
 # Empty line
-empty -> %nonBreakingSpace:* {% () => fmtTerminal("empty", null) %} 
+empty -> %nonBreakingSpace:* {% () => fmtTerminal("empty", null) %}
 
 # Any chars in a single line except "**", "~~", "__" and "``" and others
 string -> %string {% ([s]) => fmtTerminal("string", s.value.trim()) %}
@@ -192,4 +193,4 @@ word -> %word {% ([n]) => n.value %}
 number -> %number {% ([n]) => n.value %}
 
 # Match a comment starting with double forward slash //
-comm -> %comment:? {% ([n]) => n %}
+comm -> %comment {% ([n]) => n %}

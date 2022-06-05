@@ -23,7 +23,7 @@ const inlines = [
 const getEmptyTests = () => [
   {
     t: "Empty line",
-    i: ["", " "],
+    i: ["", " ", "// Comment"],
     o: [{ category: "terminal", type: "empty", value: null }],
   },
 ];
@@ -31,7 +31,7 @@ const getEmptyTests = () => [
 const elementTests = (symbol, tag) => [
   {
     t: `Element ${tag}`,
-    i: [`${symbol}Hello`, ` ${symbol} Hello `],
+    i: [`${symbol}Hello`, ` ${symbol} Hello `, `${symbol} Hello // Comment `],
     o: [
       {
         category: "element",
@@ -43,7 +43,13 @@ const elementTests = (symbol, tag) => [
   },
   {
     t: `Element ${tag} with empty attributes`,
-    i: [`${symbol}Hello{}`, ` ${symbol} Hello { } `],
+    i: [
+      `${symbol}Hello{}`,
+      ` ${symbol} Hello { } `,
+      `${symbol} Hello { 
+        // Comment 
+      } // Comment `,
+    ],
     o: [
       {
         category: "element",
@@ -58,6 +64,15 @@ const elementTests = (symbol, tag) => [
     i: [
       `${symbol}Hello{a b=1 .c #d e='e' f="f" g=.1}`,
       ` ${symbol} Hello { a b = 1 .c #d e = 'e' f = "f" g = .1 } `,
+      `${symbol} Hello { // Comment
+        a // Comment 
+        b = 1 // Comment 
+        .c // Comment 
+        #d // Comment 
+        e = 'e' // Comment 
+        f = "f" // Comment 
+        g = .1 // Comment 
+      } // Comment`,
     ],
     o: [
       {
@@ -132,7 +147,7 @@ const getElementTests = () => {
 const getComponentTests = () => [
   {
     t: "Empty component",
-    i: ["@comp", " @comp "],
+    i: ["@comp", " @comp ", " @comp // Comment "],
     o: [
       {
         category: "component",
@@ -146,6 +161,13 @@ const getComponentTests = () => [
     i: [
       `@comp{arg:'val',arg2:"val",arg3:3,arg4:.4}`,
       ` @comp { arg : 'val' , arg2 : "val" , arg3 : 3 , arg4 : .4 } `,
+      `@comp { // Comment
+        // Comment
+        arg: 'val', // Comment
+        arg2: "val", // Comment
+        arg3: 3, // Comment
+        arg4: .4 // Comment
+      }`,
     ],
     o: [
       {
