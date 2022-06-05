@@ -18,8 +18,8 @@ const number = { match: /[+-]?(?:\d*\.)?\d+/ };
 const word = { match: /[a-z]+[\w-]*/ };
 
 // Match any characters in a single line except for *`~{_ and line-breaks
-// They can be in the string escaped by a backslash \
-const string = { match: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|[^{\*`_~\n\r])+/ };
+// This characters can be in the string if escaped by a backslash \
+const string = { match: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|(?!\/\/)[^{\*`_~\n\r])+/ };
 
 // Match a single or double quoted string that allows escaped quotes with
 // backspaces \
@@ -31,8 +31,12 @@ const quotedString = [
 // Match any number of spces followeb by a @	
 const at = { match: /^[^\S\r\n]*@/ };
 
+// Match a comment starting with //
+const comment = { match: /\/\/.*/ };
+
 const lexer = moo.states({
     element: {
+        comment,
         openBrace: { match: "{", push: 'attribute' },
         at: { ...at, push: 'component' }, 
         h6: /^[^\S\r\n]*#{6}/,
@@ -52,7 +56,8 @@ const lexer = moo.states({
         string
     },
     attribute: {
-        closeBrace: { match: /}/, pop: 1 },
+        comment,
+        closeBrace: { match: "}", pop: 1 },
         space,
         number,
         word,
@@ -60,14 +65,15 @@ const lexer = moo.states({
         symbols: [".", "#", "="],
     },
     component: {
-          newLine: { ...newLine, pop: 1},
-          openBrace: { match: "{", push: 'componentContent' },
+        comment,
+        newLine: { ...newLine, pop: 1},
+        openBrace: { match: "{", push: 'componentContent' },
         at,
         space,
         word,
     },
     componentContent: {
-        closeBrace: {  match: /}/, pop: 1 },
+        closeBrace: {  match: "}", pop: 1 },
         space,
         number,
         word,
@@ -89,7 +95,7 @@ const fmtArgument  = (type, name, value)  => ({category: "argument",  type, name
 
 mad -> exp {% id %} | exp %newLine mad {% ([e,,m]) => [e[0], ...m] %}
 
-exp -> elem | comp | empty
+exp -> (elem | comp | empty) comm {% ([e]) => e %}
 
 ##########
 # Elements
@@ -184,3 +190,6 @@ word -> %word {% ([n]) => n.value %}
 
 # Match a number
 number -> %number {% ([n]) => n.value %}
+
+# Match a comment starting with double forward slash //
+comm -> %comment:? {% ([n]) => n %}

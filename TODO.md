@@ -4,6 +4,7 @@
 - [x] "string" cannot contain "{" or "@"
 - [x] Remove string quotes from the value field
 - [ ] Handle comments
+- [ ] Keep lexer positions to improve error messages
 - [ ] Handle markdown link
 - [ ] Hanlde markdown pic
 - [ ] Handle components inside components

@@ -22,62 +22,67 @@ const number = { match: /[+-]?(?:\d*\.)?\d+/ };
 const word = { match: /[a-z]+[\w-]*/ };
 
 // Match any characters in a single line except for *`~{_ and line-breaks
-// They can be in the string escaped by a backslash \
-const string = { match: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|[^{\*`_~\n\r])+/ };
+// This characters can be in the string if escaped by a backslash \
+const string = { match: /(?:(?:\\{|\\\*|\\`|\\~|\\_)|(?!\/\/)[^{\*`_~\n\r])+/ };
 
 // Match a single or double quoted string that allows escaped quotes with
 // backspaces \
 const quotedString = [
-	{ match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
-	{ match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
+    { match: /"(?:\\.|[^\\])*?"/, lineBreaks: true },
+    { match: /'(?:\\.|[^\\])*?'/, lineBreaks: true },
 ];
 
 // Match any number of spces followeb by a @	
 const at = { match: /^[^\S\r\n]*@/ };
 
+const comment = { match: /\/\/.*/ };
+
 const lexer = moo.states({
-	element: {
-		openBrace: { match: "{", push: 'attribute' },
-		at: { ...at, push: 'component' }, 
-		h6: /^[^\S\r\n]*#{6}/,
-		h5: /^[^\S\r\n]*#{5}/,
-		h4: /^[^\S\r\n]*#{4}/,
-		h3: /^[^\S\r\n]*#{3}/,
-		h2: /^[^\S\r\n]*#{2}/,
-		h1: /^[^\S\r\n]*#/,
-		GT: /^[^\S\r\n]*>/,
-		pipe: /^[^\S\r\n]*\|/,
-		strong: "**",
-		italic: "__",
-		strike: "~~",
-		code: "``",
-		newLine,
-		nonBreakingSpace,
-		string
-	},
-	attribute: {
-		closeBrace: { match: /}/, pop: 1 },
-		space,
-		number,
-		word,
-		quotedString,
-		symbols: [".", "#", "="],
-	},
-	component: {
-	  	newLine: { ...newLine, pop: 1},
-	  	openBrace: { match: "{", push: 'componentContent' },
-		at,
-		space,
-		word,
-	},
-	componentContent: {
-		closeBrace: {  match: /}/, pop: 1 },
-		space,
-		number,
-		word,
-		quotedString,
-		symbols: [",", ":"],
-	},
+    element: {
+        comment,
+        openBrace: { match: "{", push: 'attribute' },
+        at: { ...at, push: 'component' }, 
+        h6: /^[^\S\r\n]*#{6}/,
+        h5: /^[^\S\r\n]*#{5}/,
+        h4: /^[^\S\r\n]*#{4}/,
+        h3: /^[^\S\r\n]*#{3}/,
+        h2: /^[^\S\r\n]*#{2}/,
+        h1: /^[^\S\r\n]*#/,
+        GT: /^[^\S\r\n]*>/,
+        pipe: /^[^\S\r\n]*\|/,
+        strong: "**",
+        italic: "__",
+        strike: "~~",
+        code: "``",
+        newLine,
+        nonBreakingSpace,
+        string
+    },
+    attribute: {
+        comment,
+        closeBrace: { match: "}", pop: 1 },
+        space,
+        number,
+        word,
+        quotedString,
+        symbols: [".", "#", "="],
+    },
+    component: {
+        comment,
+        newLine: { ...newLine, pop: 1},
+        openBrace: { match: "{", push: 'componentContent' },
+        at,
+        space,
+        word,
+    },
+    componentContent: {
+        closeBrace: {  match: "}", pop: 1 },
+        space,
+        number,
+        word,
+        quotedString,
+        symbols: [",", ":"],
+    },
 });
 
 const fmtElement   = (type, value, attrs) => ({category: "element",   type,       value, attrs})
@@ -92,9 +97,10 @@ var grammar = {
     ParserRules: [
     {"name": "mad", "symbols": ["exp"], "postprocess": id},
     {"name": "mad", "symbols": ["exp", (lexer.has("newLine") ? {type: "newLine"} : newLine), "mad"], "postprocess": ([e,,m]) => [e[0], ...m]},
-    {"name": "exp", "symbols": ["elem"]},
-    {"name": "exp", "symbols": ["comp"]},
-    {"name": "exp", "symbols": ["empty"]},
+    {"name": "exp$subexpression$1", "symbols": ["elem"]},
+    {"name": "exp$subexpression$1", "symbols": ["comp"]},
+    {"name": "exp$subexpression$1", "symbols": ["empty"]},
+    {"name": "exp", "symbols": ["exp$subexpression$1", "comm"], "postprocess": ([e]) => e},
     {"name": "elem$subexpression$1", "symbols": ["h1"]},
     {"name": "elem$subexpression$1", "symbols": ["h2"]},
     {"name": "elem$subexpression$1", "symbols": ["h3"]},
@@ -223,7 +229,10 @@ var grammar = {
     {"name": "aplhanum", "symbols": ["number"], "postprocess": id},
     {"name": "quoted", "symbols": [(lexer.has("quotedString") ? {type: "quotedString"} : quotedString)], "postprocess": ([n]) => n.value.substring(1, n.value.length - 1)},
     {"name": "word", "symbols": [(lexer.has("word") ? {type: "word"} : word)], "postprocess": ([n]) => n.value},
-    {"name": "number", "symbols": [(lexer.has("number") ? {type: "number"} : number)], "postprocess": ([n]) => n.value}
+    {"name": "number", "symbols": [(lexer.has("number") ? {type: "number"} : number)], "postprocess": ([n]) => n.value},
+    {"name": "comm$ebnf$1", "symbols": [(lexer.has("comment") ? {type: "comment"} : comment)], "postprocess": id},
+    {"name": "comm$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
+    {"name": "comm", "symbols": ["comm$ebnf$1"], "postprocess": ([n]) => n}
 ]
   , ParserStart: "mad"
 }
